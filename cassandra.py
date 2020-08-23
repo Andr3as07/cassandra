@@ -217,7 +217,7 @@ def get_level(usr):
             break
 
     return lv
-            
+
 async def print_audit(gid, audit, uid, message):
     if gid is None:
         return
@@ -391,12 +391,12 @@ async def handle_rusr_reaction(reaction, user, game):
         game["index"] = game["index"] % len(game["alive"])
 
         rusr_messages[game_id] = game
- 
+
 @bot.event
 async def on_reaction_add(reaction, user):
     if user.bot == True:
         return
-    
+
     # Do not do anything on private messages
     if reaction.message.guild == None:
         return
@@ -409,7 +409,7 @@ async def on_reaction_add(reaction, user):
         rusr = rusr_messages[rusr_id]
         if rusr["msg"].id == reaction.message.id:
             await handle_rusr_reaction(reaction, user, rusr)
-    
+
     # Do not count reactions to bots
     if reaction.message.author.bot == True:
         return
@@ -436,14 +436,6 @@ async def on_command_error(ctx, error):
     else:
         await ctx.send("Error while executing the command.")
         print(str(type(error)) + ": " + str(error))
-
-@bot.event
-async def on_ready():
-    update_voice.start()
-    update_nicknames.start()
-    update_help.start()
-    update_rusr.start()
-    print(f'Bot {bot.user.name} has connected to Discord!')
 
 # ==============================================================================
 # Commands
@@ -476,7 +468,7 @@ help_pages = [
         "description": None,
         "content": {
             #"lottery": "Buy a lottery ticket.",
-            #"coinflip [bet = 0]": "Flip a coin and bet on the outcome.",
+            #"coinflip <heads|tails> [bet = 0]": "Flip a coin and bet on the outcome.",
             #"slots [bet = 0]": "Spin the slots for a chance to win the jackpot!",
             "spin": "Spin the wheel every 5 minutes for a reward.",
             #"scratch": "Scratch a card for a chanceto win a reward."
@@ -506,6 +498,15 @@ help_pages = [
         }
     }
 ]
+
+# Debug
+@bot.command(name="load")
+async def load(ctx, extension):
+    bot.load_extension(f'cogs.{extension}')
+
+@bot.command(name="unload")
+async def unload(ctx, extension):
+    bot.unload_extension(f'cogs.{extension}')
 
 # General
 bot.remove_command('help')
@@ -661,10 +662,6 @@ async def wyr(ctx):
 async def lottery(ctx):
     await ctx.send("Not implemented")
 
-@bot.command(name="coinflip", help="Flip a coin and bet on the outcome.")
-async def coinflip(ctx):
-    await ctx.send("Not implemented")
-
 @bot.command(name="slots", help="Spin the slots for a chance to win the jackpot!")
 async def slots(ctx):
     await ctx.send("Not implemented")
@@ -691,7 +688,7 @@ async def spin(ctx):
     if getts() - usr["casino"]["last_spin"] < 300:
         await ctx.send("You have to wait " + sec2human(300 - (getts() - usr["casino"]["last_spin"])) + " for your next chance of a reward.")
         return
-        
+
     total = 0
     for outcome in ods:
         total = total + outcome["propbability"]
@@ -750,7 +747,7 @@ async def snakeeyes(ctx):
 
 @bot.command(name="clear", help="Clears some messages from the history")
 @commands.has_permissions(manage_messages=True)
-async def clear(ctx, amt = 10):    
+async def clear(ctx, amt = 10):
     if not type(amt) is int:
         try:
             amt = int(amt, 10)
@@ -763,7 +760,7 @@ async def clear(ctx, amt = 10):
         return
     elif amt > 100:
         amt = 100
-    
+
     await ctx.channel.purge(limit=amt + 1)
 
     await print_audit(ctx.guild.id, "clear", ctx.author.id, "Cleared " + str(amt) + " messages from channel <#" + str(ctx.channel.id) + ">")
@@ -814,9 +811,9 @@ async def ban(ctx, member : discord.Member, *, reason = None):
         reason = "No reason given"
 
     # Time ban
-    time = -1    
+    time = -1
     times = "Permanent"
-    
+
     if time > 0:
         times = sec2human(time)
 
@@ -922,12 +919,12 @@ async def history(ctx, member : discord.Member):
         description = description
     )
     embed.set_thumbnail(url=member.avatar_url)
-    
+
     embed.add_field(name=":no_entry_sign: Bans", value=str(bans), inline=True)
     embed.add_field(name=":information_source: Kicks", value=str(kicks), inline=True)
     embed.add_field(name=":warning: Warnings", value=str(warnings), inline=True)
     await ctx.send(embed=embed)
-    
+
 @bot.command(name="whois", help="Get's information about a user")
 @commands.has_permissions(manage_messages=True)
 async def whois(ctx, member : discord.Member):
@@ -948,7 +945,7 @@ async def whois(ctx, member : discord.Member):
         title = title
     )
     embed.set_thumbnail(url=member.avatar_url)
-    
+
     embed.add_field(name="ID", value=str(member.id))
     embed.add_field(name="Account Created", value=str(member.created_at), inline=True)
     embed.add_field(name="Joined At", value=str(member.joined_at), inline=True)
@@ -1153,7 +1150,7 @@ async def ticket(ctx, action = None, *, name = None):
 
     elif action == "close" or action == "end" or action == "delete" or action == "del":
         ch = ctx.channel
-        
+
         ticket = None
         srv = load_server(ctx.guild.id)
 
@@ -1183,7 +1180,7 @@ async def ticket(ctx, action = None, *, name = None):
         await ch.delete(reason="Ticket " + str(ticket['id']) + " closed by " + ctx.author.name + "#" + str(ctx.author.discriminator))
 
         # TODO: Send message to the ticket updates channel
-        
+
 # ==============================================================================
 # Tasks
 # ==============================================================================
@@ -1220,7 +1217,7 @@ async def update_voice():
 
                 # Give an xp bonus for more people in the voicechat
                 usr['xp'] = usr['xp'] + VOICE_BONUS_XP + (vchmem - 2)
-                
+
                 save_user(usr)
 
 @tasks.loop(seconds=NICKNAME_TIMEOUT)
@@ -1264,7 +1261,7 @@ async def update_help():
                 print(ex)
 
             help_messages.pop(hmsgid)
-            
+
 @tasks.loop(seconds=RUSR_TIMEOUT)
 async def update_rusr():
     if len(rusr_messages) == 0:
@@ -1324,7 +1321,7 @@ async def update_rusr():
             # Determine current player
             current = game["alive"][game["index"]]
             game["index"] = game["index"] % len(game["alive"])
-            
+
             if len(game["alive"]) == 1:
                 # One player left
 
@@ -1373,5 +1370,16 @@ async def update_rusr():
 
             await msg.edit(embed=embed)
             rusr_messages.pop(id)
+
+for filename in os.listdir('./cogs'):
+    if filename.endswith('.py'):
+        print("Loading cog: %s" % filename)
+        bot.load_extension("cogs.%s" % filename[:-3])
+
+update_voice.start()
+update_nicknames.start()
+update_help.start()
+update_rusr.start()
+print(f'Cassandra has connected to Discord!')
 
 bot.run(TOKEN)
