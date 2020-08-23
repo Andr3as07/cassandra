@@ -40,8 +40,6 @@ EMOJI_PREVIOUS = "◀"
 EMOJI_NEXT = "▶"
 EMOJI_LAST = "⏭"
 EMOJI_CLOSE = "⏹"
-EMOJI_A = "🅰"
-EMOJI_B = "🅱"
 EMOJI_JOIN = "🆗"
 EMOJI_FIRE = "🔫"
 EMOJI_ALIVE = "👥"
@@ -572,43 +570,6 @@ async def profile(ctx, name = None):
     await ctx.send(embed=embed)
 
 # Fun
-@bot.command(name="8ball", help="Asks the magic 8ball")
-async def eight_ball(ctx):
-    answers = [
-        "It is certain.",
-        "It is decidedly so.",
-        "Without a doubt.",
-        "Yes – definitely.",
-        "You may rely on it.",
-        "As I see it, yes.",
-        "Most likely.",
-        "Outlook good.",
-        "Yes.",
-        "Signs point to yes.",
-
-        "Reply hazy, try again."
-        "Ask again later.",
-        "Better not tell you now.",
-        "Cannot predict now.",
-        "Concentrate and ask again.",
-
-        "Don't count on it.",
-        "My reply is no.",
-        "My sources say no.",
-        "Outlook not so good.",
-        "Very doubtful.",
-    ]
-
-    await ctx.send("🎱 " + random.choice(answers))
-
-@bot.command(name="conn", help="Starts a game of connect-4")
-async def conn(ctx):
-    await ctx.send("Not implemented")
-
-@bot.command(name="fortune", help="Opens a fortune cookie")
-async def fortune(ctx):
-    await ctx.send("Not implemented")
-
 @bot.command(name="rusr", help="Plays a round of russian roulette")
 async def rusr(ctx):
     id = str(ctx.guild.id) + ":" + str(ctx.channel.id)
@@ -633,29 +594,6 @@ async def rusr(ctx):
         ],
         "dead": []
     }
-
-@bot.command(name="tord", help="Play a game of truth or dare")
-async def tord(ctx):
-    await ctx.send("Not implemented")
-
-@bot.command(name="ttt", help="Starts a game of Tick-Tack-Toe")
-async def ttt(ctx):
-    await ctx.send("Not implemented")
-
-@bot.command(name="wyr", help="What Would You Rather do?")
-async def wyr(ctx):
-    question = random.choice(WYR_QUESTIONS)
-
-    embed = discord.Embed(
-        title = "Would You Rather",
-        description = "**" + question[0] + "**\n\n\n" + EMOJI_A + " " + question[1] + "\n\n" + EMOJI_B + " " + question[2],
-        colour = discord.Colour.red()
-    )
-
-    msg = await ctx.send(embed=embed)
-
-    await msg.add_reaction(EMOJI_A)
-    await msg.add_reaction(EMOJI_B)
 
 # Casino
 @bot.command(name="lottery", help="Buy a lottery ticket.")
