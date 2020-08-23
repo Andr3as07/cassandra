@@ -439,37 +439,15 @@ async def on_command_error(ctx, error):
 # Commands
 # ==============================================================================
 
-help_pages = [
+help_pages = None
+
+help_pages_old = [
     {
         "title": "General Commands",
         "description": None,
         "content": {
             "help": "Shows this help dialog.",
             "profile  [user]": "Shows a users profile."
-        }
-    },
-    {
-        "title": "Fun Commands",
-        "description": None,
-        "content": {
-            "8ball <Question ...>": "Ask the magic 8ball.",
-            #"conn <User>": "Starts a game of connect-4 against the mentioned user.",
-            #"fortune": "Opens a fortune cookie.",
-            #"rusr": "Plays a round of russian roulette.",
-            #"tord": "Play a game of truth or dare.",
-            #"ttt <User>": "Starts a game of Tick-Tack-Toe.",
-            "wyr": "Displays a would you rather question.",
-        }
-    },
-    {
-        "title": "Casino Commands",
-        "description": None,
-        "content": {
-            #"lottery": "Buy a lottery ticket.",
-            #"coinflip <heads|tails> [bet = 0]": "Flip a coin and bet on the outcome.",
-            #"slots [bet = 0]": "Spin the slots for a chance to win the jackpot!",
-            "spin": "Spin the wheel every 5 minutes for a reward.",
-            #"scratch": "Scratch a card for a chanceto win a reward."
         }
     },
     {
@@ -511,7 +489,18 @@ bot.remove_command('help')
 
 @bot.command(name="help", help="Shows the help menu.")
 async def help(ctx):
-    page = help_pages[0]
+    global help_pages
+
+    # TODO: Update help pages
+    if help_pages is None:
+        help_pages = []
+        for cogname in _get_loaded_cogs():
+            try:
+                page = bot.get_cog(cogname).get_help_page()
+                help_pages.append(page)
+            except:
+                pass
+
     embed = get_help_page(0)
 
     msg = await ctx.send(embed=embed)
@@ -552,8 +541,8 @@ async def profile(ctx, name = None):
         await ctx.send("User not found.")
         return
 
-    content =          ":moneybag: Coins: " + str(usr['coins'])
-    content = content +  "\n:star: XP:    " + str(usr['xp'])
+    content =             ":moneybag: Coins: " + str(usr['coins'])
+    content = content + "\n:star: XP:    " + str(usr['xp'])
     content = content + "\n:star2: Level: " + str(get_level(usr))
 
     embed = discord.Embed(
@@ -1282,6 +1271,17 @@ async def update_rusr():
 
             await msg.edit(embed=embed)
             rusr_messages.pop(id)
+
+def _get_loaded_cogs():
+    cogs = []
+    for filename in os.listdir('./cogs'):
+        if filename.endswith('.py'):
+            cogname = filename[:-3]
+            cog = bot.get_cog(cogname)
+            if cog is not None:
+                cogs.append(cogname)
+
+    return cogs
 
 for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):

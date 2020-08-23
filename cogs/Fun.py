@@ -15,6 +15,21 @@ class Fun(commands.Cog):
             ["Would you rather Swim 300 meters through shit or dead bodies?", "Swim 300 meters through shit", "Swim 300 meters through dead bodies"]
         ]
 
+    def get_help_page(self):
+        return {
+            "title": "Fun Commands",
+            "description": None,
+            "content": {
+                "8ball <Question ...>": "Ask the magic 8ball.",
+                #"conn <User>": "Starts a game of connect-4 against the mentioned user.",
+                #"fortune": "Opens a fortune cookie.",
+                #"rusr": "Plays a round of russian roulette.",
+                #"tord": "Play a game of truth or dare.",
+                #"ttt <User>": "Starts a game of Tick-Tack-Toe.",
+                "wyr": "Displays a would you rather question.",
+            }
+        }
+
     @commands.command(name="conn")
     async def conn(self, ctx):
         await ctx.send("Not implemented")

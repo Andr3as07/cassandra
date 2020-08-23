@@ -2,9 +2,29 @@ import discord
 import random
 from discord.ext import commands
 
+EMOJI_WARN = "⚠"
+EMOJI_ERROR = "❌"
+EMOJI_MONEY = ":moneybag:"
+
 class Cassino(commands.Cog):
     def __init__(self, client):
         self.client = client
+
+    def get_help_page(self):
+        return {
+            "title": "Casino Commands",
+            "description": None,
+            "content": {
+                #"lottery": "Buy a lottery ticket.",
+                "coinflip <heads|tails> [bet = 0]": "Flip a coin and bet on the outcome.",
+                #"slots [bet = 0]": "Spin the slots for a chance to win the jackpot!",
+                # "spin": "Spin the wheel every 5 minutes for a reward.",
+                #"scratch": "Scratch a card for a chance to win a reward.",
+                #"dice": Roll the dice, if you roll a 6 you'll get your bet x5!",
+                # "snakeeyes": "Two dice are rolled. Roll a 1 on either one to win. Get both on 1 to recieve a special bonus reward.",
+                # "blackjack": "Play a game of blackjack.",
+            }
+        }
 
     def _get_bet(self, bet):
         if bet is None:
@@ -18,7 +38,7 @@ class Cassino(commands.Cog):
 
     async def _can_afford(self, ctx, usr, bet):
         if bet > usr.balance:
-            await ctx.send("❌ You can't afford this bet!")
+            await ctx.send(EMOJI_ERROR + " You can't afford this bet!")
             return False
 
         return True
@@ -71,11 +91,19 @@ class Cassino(commands.Cog):
         description = "It's **%s**\n" % flip_str
 
         if won:
-            description = description + "You won" # Todo handle payment
             color = discord.Colour.green()
+            description = description + "You won"
+
+            if bet > 0:
+                usr.balance = usr.balance + bet
+                description = description + (" %s " % bet) + EMOJI_MONEY + ("\nYou now have %s " % usr.balance) + EMOJI_MONEY
         else:
-            description = description + "You lost" # Todo handle payment
             color = discord.Colour.red()
+            description = description + "You lost"
+
+            if bet > 0:
+                usr.balance = usr.balance - bet
+                description = description + (" %s " % bet) + EMOJI_MONEY + ("\nYou now have %s " % usr.balance) + EMOJI_MONEY
 
         embed = discord.Embed(
             title = "Coinflip",
@@ -84,16 +112,10 @@ class Cassino(commands.Cog):
         )
         embed.set_thumbnail(url=thumbnail)
 
-        warn = False
-        if bet is None:
-            warn = True
-        if bet is not None and usr is not None and bet < (usr.balance * 0.2):
-            warn = True
-
-        if warn:
-            embed.add_field(name="⚠ Warning", value="This bet does not award you any xp.\nTo get xp you need to bet at least 20% of your balance.", inline=True)
-
         await ctx.send(embed=embed)
+
+        if usr:
+            self.client.get_cog('Main').save_user(usr)
 
     @commands.command(name="lottery")
     async def lottery(self, ctx):

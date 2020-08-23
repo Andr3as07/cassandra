@@ -15,24 +15,23 @@ class Main(commands.Cog):
         print("LOD U %s %s" % (srv.ID, uid))
 
         usr = User(srv, uid)
+        usr.load()
+        return usr
 
-        if usr.load():
-            return usr
+    def save_user(self, usr):
+        print("SAV U %s %s" % (usr.server.ID, usr.ID))
 
-        return None
+        usr.save()
 
-    def save_user(self, srv, usr):
-        return False
+        return True
 
     def load_server(self, sid):
         print("LOD S %s" % sid)
 
         srv = Server(sid)
+        srv.load()
 
-        if srv.load():
-            return srv
-
-        return None
+        return srv
 
     def save_server(self, srv):
         return False

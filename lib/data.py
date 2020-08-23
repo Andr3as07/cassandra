@@ -22,8 +22,55 @@ class Server:
         self.tickets_next_id = 1
         self.tickets = []
 
+    def _get_dir_path(self):
+        return "data/%s" % self.ID
+
+    def _get_path(self):
+        return "data/%s/config.json" % self.ID
+
     def load(self):
-        return True # TODO: Implement
+        path = self._get_path()
+
+        if not os.path.isfile(path):
+            return False
+
+        with open(path) as f:
+            jdata = json.load(f)
+
+            # Prefix
+            if "prefix_used" in jdata:
+                self.prefix_used = jdata["prefix_used"]
+
+            # Ignored Prefixes
+            if "prefix_blocked" in jdata:
+                self.prefix_blocked = jdata["prefix_blocked"]
+
+            # Audit Settings
+            if "audit" in jdata:
+                self.audit_channel = jdata["audit"]["channel"]
+                self.audit_log_clear = jdata["audit"]["clear"]
+                self.audit_log_warn = jdata["audit"]["warn"]
+                self.audit_log_kick = jdata["audit"]["kick"]
+                self.audit_log_block = jdata["audit"]["block"]
+
+            # Roles list
+            if "roles_admin" in jdata:
+                self.roles_admin = jdata["roles_admin"]
+            if "roles_mod" in jdata:
+                self.roles_mod = jdata["roles_mod"]
+
+            # Tickets
+            if "tickets" in jdata:
+                if "tickets_channel_closed" in jdata["tickets"]:
+                    self.tickets_channel_closed = jdata["tickets"]["chennel_closed"]
+                if "tickets_channel_updates" in jdata["tickets"]:
+                    self.tickets_channel_updates = jdata["tickets"]["chennel_updates"]
+
+                # TODO: Parse tickets
+
+                self.tickets_next_id = self.tickets.length() + 1
+
+        return True
 
 class Ticket:
     def __init__(self, server, id):
@@ -76,20 +123,54 @@ class User:
         with open(path) as f:
             jdata = json.load(f)
 
+            # Balance
             if "balance" in jdata:
                 self.balance = jdata["balance"]
             elif "coins" in jdata:
                 self.balance = jdata["coins"]
 
+            # xp
             if "xp" in jdata:
                 self.xp = jdata["xp"]
+
+            # msg
+            if "msg" in jdata:
+                self.msg_last = jdata["msg"]["last"]
+                self.msg_awarded = jdata["msg"]["awarded"]
+                self.msg_count = jdata["msg"]["count"]
+
+            # msg
+            if "reaction" in jdata:
+                self.reaction_last = jdata["reaction"]["last"]
+                self.reaction_awarded = jdata["reaction"]["awarded"]
+                self.reaction_count = jdata["reaction"]["count"]
+
+            # voice
+            if "voice" in jdata:
+                self.voice_time = jdata["voice"]["time"]
+
+            # cassino
+            if "cassino" in jdata:
+                self.cassino_last_spin = jdata["cassino"]["last_spin"]
+
+            # TODO: History
+            if "history" in jdata:
+                self.history = jdata["history"] # TODO: Actualy parse this data
+
+            # TODO: Nicknames
+            if "nicknames" in jdata:
+                self.nicknames = jdata["nicknames"] # TODO: Actualy parse this data
+
+            # TODO: Names
+            if "names" in jdata:
+                self.names = jdata["names"] # TODO: Actualy parse this data
 
         return True
 
     def save(self):
         path = self._get_path()
 
-        os.makedirs(self._get_dir_path(), exists_ok=True)
+        os.makedirs(self._get_dir_path(), exist_ok=True)
 
         with open(path, 'w') as f:
             data = {
@@ -110,9 +191,9 @@ class User:
                 'voice': {
                     'time': self.voice_time
                 },
-                'history': [], # To be filled later
-                'nicknames': [], # To be filled later
-                'names': [], # To be filled later
+                'history': self.history, # To be filled later
+                'nicknames': self.nicknames, # To be filled later
+                'names':  self.names, # To be filled later
                 'casino': {
                     'last_spin': self.casino_last_spin
                 }
