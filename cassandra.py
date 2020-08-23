@@ -596,14 +596,6 @@ async def rusr(ctx):
     }
 
 # Casino
-@bot.command(name="lottery", help="Buy a lottery ticket.")
-async def lottery(ctx):
-    await ctx.send("Not implemented")
-
-@bot.command(name="slots", help="Spin the slots for a chance to win the jackpot!")
-async def slots(ctx):
-    await ctx.send("Not implemented")
-
 @bot.command(name="spin", help="Spin the wheel every 5 minutes for a reward.")
 async def spin(ctx):
     ods = [
@@ -665,24 +657,7 @@ async def spin(ctx):
     usr["casino"]["last_spin"] = getts()
     save_user(usr)
 
-@bot.command(name="scratch", help="Scratch a card for a chanceto win a reward.")
-async def scratch(ctx):
-    await ctx.send("Not implemented")
-
-@bot.command(name="dice", help="Roll the dice, if you roll a 6 you'll get your bet x5!")
-async def dice(ctx):
-    await ctx.send("Not implemented")
-
-@bot.command(name="snakeeyes", help="Two dice are rolled. Roll a 1 on either one to win. Get both on 1 to recieve a special bonus reward.")
-async def snakeeyes(ctx):
-    await ctx.send("Not implemented")
-
-@bot.command(name="blackjack", help="Play a game of blackjack.")
-async def snakeeyes(ctx):
-    await ctx.send("Not implemented")
-
 # Moderation
-
 @bot.command(name="clear", help="Clears some messages from the history")
 @commands.has_permissions(manage_messages=True)
 async def clear(ctx, amt = 10):
@@ -1002,7 +977,6 @@ async def settings(ctx, action = None, key = None, value = None):
             await ctx.send(resp)
             return
 # Tickets
-
 @bot.command(name="ticket", help="Manages tickets")
 async def ticket(ctx, action = None, *, name = None):
     srv = load_server(ctx.guild.id)

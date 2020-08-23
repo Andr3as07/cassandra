@@ -95,5 +95,30 @@ class Cassino(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    @commands.command(name="lottery")
+    async def lottery(self, ctx):
+        await ctx.send("Not implemented")
+
+    @commands.command(name="slots")
+    async def slots(self, ctx):
+        await ctx.send("Not implemented")
+
+    @commands.command(name="scratch")
+    async def scratch(self, ctx):
+        await ctx.send("Not implemented")
+
+    @commands.command(name="dice")
+    async def dice(self, ctx):
+        await ctx.send("Not implemented")
+
+    @commands.command(name="snakeeyes")
+    async def snakeeyes(self, ctx):
+        await ctx.send("Not implemented")
+
+    @commands.command(name="blackjack")
+    async def blackjack(self, ctx):
+        await ctx.send("Not implemented")
+
+
 def setup(client):
     client.add_cog(Cassino(client))
