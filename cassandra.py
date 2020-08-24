@@ -45,51 +45,6 @@ EMOJI_FIRE = "🔫"
 EMOJI_ALIVE = "👥"
 EMOJI_DEAD = "⚰"
 
-WYR_QUESTIONS = [
-    ["Would you rather Swim 300 meters through shit or dead bodies?", "Swim 300 meters through shit", "Swim 300 meters through dead bodies"],
-    ["Would you rather Have a dog with a cat’s personality or a cat with a dog’s personality?", "Have a dog with a cat’s personality", "Have a cat with a dog’s personality"],
-    ["If you were reborn in a new life, would you rather be alive in the past or future?", "Be alive in the past", "Be alive in the future"],
-    ["Would you rather eat no candy at Halloween or no turkey at Thanksgiving?", "Eat no candy at Halloween", "Eat no turkey at Thanksgiving"],
-    ["Would you rather date someone you love or date someone who loves you?", "Date someone you love", "Date someone who loves you"],
-    ["Would you rather lose the ability to lie or believe everything you’re told?", "Lose the ability to lie", "Believe everything you’re told"],
-    ["Would you rather be free or be totally safe?", "Be free", "Be totally safe"],
-    ["Would you rather Eat shit that tasted like chocolate, or eat chocolate that tasted like crap?", "Eat shit that tasted like chocolate", "Eat chocolate that tasted like crap"],
-    ["Would you rather Look 10 years older from the neck up, or the neck down?", "Look 10 years older from the neck up", "Would you rather Look 10 years older from the neck down"],
-    ["Would you rather Be extremely underweight or extremely overweight?", "Be extremely underweight", "Be extremely overweight"],
-    ["Would you rather Experience the beginning of planet earth or the end of planet earth?", "Experience the beginning of planet earth", "Experience the end of planet earth"],
-    ["Would you rather have three kids and no money, or no kids with three million dollars?", "Have three kids and no money", "No kids with three million dollars"],
-    ["Would you rather Be the funniest person in the room or the most intelligent?", "Be the funniest person in the room", "Be the most intelligent person in the room"],
-    ["Would you rather Have a Lamborghini in your garage or a bookcase with 9000 books and infinite knowledge?", "Have a Lamborghini in your garage", "Have a bookcase with 9000 books and infinite knowledge"],
-    ["Would you rather Reverse one decision you make every day or be able to stop time for 10 seconds every day?", "Reverse one decision you make every day", "Be able to stop time for 10 seconds every day"],
-    ["Would you rather Win $50,000 or let your best friend win $500,000?", "Win $50,000", "Let your best friend win $500,000"],
-    ["Would you rather Run at 100 mph or fly at ten mph?", "Run at 100 mph", "Fly at ten mph"],
-    ["Would you rather Continue with your life or restart it?", "Continue with your life", "Restart it"],
-    ["Would you rather Be able to talk your way out of any situation, or punch your way out of any situation?", "Be able to talk your way out of any situation", "Be able to punch your way out of any situation"],
-    ["Would you rather Have free Wi-Fi wherever you go or have free coffee where/whenever you want?", "Have free Wi-Fi wherever you go", "Have free coffee where/whenever you want"],
-    ["Would you rather have seven fingers on each hand or have seven toes on each foot?", "Have seven fingers on each hand", "Have seven toes on each foot"],
-    ["Would you rather live low life with your loved one or rich life all alone?", "Live low life with your loved one", "Rich life all alone"],
-    ["Would you rather Have no one to show up for your Wedding or your funeral?", "Have no one to show up for your Wedding", "Have no one to show up for your funeral"],
-    ["Would you rather Rule the World or live in a World with absolutely no problems at all?", "Rule the World", "Live in a World with absolutely no problems at all"],
-    ["Would you rather go back to the past and meet your loved ones who passed away or go to the future to meet your children or grandchildren to be?", "Go back to the past and meet your loved ones who passed away", "Go to the future to meet your children or grandchildren to be"],
-    ["Would you rather Speak your mind or never speak again?", "Speak your mind", "Never speak again"],
-    ["Would you rather Live the life of a king with no family or friends or live like a vagabond with your friends or family?", "Live the life of a king with no family", "Live like a vagabond with your friends or family"],
-    ["Would you rather know how you will die or when you will die?", "Know how you will die", "Know when you will die"],
-    ["Would you rather Speak all languages or be able to speak to all animals?", "Speak all languages", "Be able to speak to all animals"],
-    ["Would you rather get away with lying every time or always know that someone is lying?", "Get away with lying every time", "Always know that someone is lying"],
-    ["Would you rather Eat your dead friend or kill your dog and eat it when you are marooned on a lonely island?", "Eat your dead friend", "Kill your dog and eat it"],
-    ["Would you rather Have a billion dollars to your name or spend $1000 for each hungry and homeless person?", "Have a billion dollars to your name", "Spend $1000 for each hungry and homeless person"],
-    ["Would you rather End death due to car accidents or end terrorism?", "End death due to car accidents", "End terrorism"],
-    ["Would you rather Leave your unemployed son homeless or pay for his dr#g habits and illegal activities?", "Leave your unemployed son homeless", "Pay for his drug habits and illegal activities"],
-    ["Would you rather End the life a single human being or 100 cute baby animals?", "End the life a single human", "End the life of 100 cute baby animals"],
-    ["Would you rather Skinny dip with your classmate or with a stranger?", "Skinny dip with your classmate", "With a stranger"],
-    ["Would you rather give up your love life or work life?", "Give up your love life", "Give up your work life"],
-    ["Would you rather live in an amusement park or a zoo?", "Live in an amusement park", "Live in a zoo"],
-    ["Would you rather be a millionaire by winning the lottery or by working 100 hours a week?", "Be a millionaire by winning the lottery", "Be a millionaire by working 100 hours a week"],
-    ["Would you rather read minds or accurately predict future?", "Read minds", "Accurately predict future"],
-    ["Would you rather eat only pizza for 1 year or eat no pizza for 1 year?", "Eat only pizza for 1 year", "Eat no pizza for 1 year"],
-    ["Would you rather visit 100 years in the past or 100 years in the future?", "Visit 100 years in the past", "Visit 100 years in the future"]
-]
-
 # ==============================================================================
 # Cache
 # ==============================================================================
@@ -99,23 +54,6 @@ rusr_messages = {}
 # ==============================================================================
 # Util
 # ==============================================================================
-
-def sec2human(sec):
-    hours = sec // (60 * 60)
-    sec = sec % (60 * 60)
-
-    m = sec // 60
-    sec = sec % 60
-
-    if hours > 0:
-        return str(hours) + "h " + str(m) + "min "
-    elif m > 0:
-        return str(m) + "min " + str(sec) + "sec"
-    else:
-        return str(sec) + "sec"
-
-def getts():
-    return int(time.time())
 
 def get_server_path(gid):
     return "data/" + str(gid)
@@ -205,31 +143,6 @@ def load_user(gid, uid, create = True):
             }
         }
 
-def get_level(usr):
-    lv = 1
-    for i in range(2, 100):
-        req = math.floor(math.pow(i, 3))
-        if req < usr['xp']:
-            lv = i
-        else:
-            break
-
-    return lv
-
-async def print_audit(gid, audit, uid, message):
-    if gid is None:
-        return
-
-    srv = load_server(gid)
-    if srv is None:
-        return
-
-    # If an "audit log" is enabled
-    if srv['audit_log']['channel'] is not None and srv['audit_log'][audit] == True:
-        ch = bot.get_channel(srv['audit_log']['channel'])
-        if ch is not None:
-            await ch.send("<@!" + str(uid) + ">: " + str(message))
-
 def get_help_page(index):
     page = help_pages[index]
     embed = discord.Embed(
@@ -261,8 +174,8 @@ def get_prefix(client, message):
     if message.guild == None:
         return str(random.randrange(-99999999, 99999999))
 
-    srv = load_server(message.guild.id)
-    return srv['prefix_used']
+    srv = bot.get_cog('Main').load_server(message.guild.id)
+    return srv.prefix_used
 
 bot = commands.Bot(command_prefix=get_prefix)
 
@@ -484,6 +397,12 @@ async def load(ctx, extension):
 async def unload(ctx, extension):
     bot.unload_extension(f'cogs.{extension}')
 
+
+@bot.command(name="reload")
+async def reload(ctx, extension):
+    bot.unload_extension(f'cogs.{extension}')
+    bot.load_extension(f'cogs.{extension}')
+
 # General
 bot.remove_command('help')
 
@@ -519,45 +438,6 @@ async def help(ctx):
     await msg.add_reaction(EMOJI_NEXT)
     await msg.add_reaction(EMOJI_LAST)
 
-@bot.command(name="profile", help="Shows the profile.")
-async def profile(ctx, name = None):
-    # Do not do anything on private messages
-    if ctx.guild == None:
-        return
-
-    uid = ctx.author.id
-    if not name == None:
-        if name.startswith("<@!") and name.endswith(">"):
-            uid = name[3:len(name) - 1]
-
-    usr = load_user(ctx.guild.id, uid, False)
-    if usr == None:
-        await ctx.send("User not found.")
-        return
-
-    discord_user = bot.get_user(usr['uid'])
-
-    if discord_user is None:
-        await ctx.send("User not found.")
-        return
-
-    content =             ":moneybag: Coins: " + str(usr['coins'])
-    content = content + "\n:star: XP:    " + str(usr['xp'])
-    content = content + "\n:star2: Level: " + str(get_level(usr))
-
-    embed = discord.Embed(
-        title = "Profile for " + usr["name"] + " on server " + ctx.guild.name,
-        description = content,
-        colour = discord.Colour.green()
-    )
-    embed.set_thumbnail(url=discord_user.avatar_url)
-
-    embed.add_field(name=":writing_hand: Messages", value="Total: " + str(usr['msg']['count']), inline=True)
-    embed.add_field(name=":heart: Reactions", value="Total: " + str(usr['reaction']['count']), inline=True)
-    embed.add_field(name=":microphone2: Voice", value="Time: " + sec2human(usr['voice']['time']), inline=True)
-
-    await ctx.send(embed=embed)
-
 # Fun
 @bot.command(name="rusr", help="Plays a round of russian roulette")
 async def rusr(ctx):
@@ -583,68 +463,6 @@ async def rusr(ctx):
         ],
         "dead": []
     }
-
-# Casino
-@bot.command(name="spin", help="Spin the wheel every 5 minutes for a reward.")
-async def spin(ctx):
-    ods = [
-        { "symbol": "<:c500:710482148305403924>", "propbability": 1, "ods": 500, "name": "MYTHIC" },
-        { "symbol": "<:c100:710482154500653056>", "propbability": 1, "ods": 100, "name": "IMORTAL" },
-        { "symbol": "<:c50:710482156895469691>", "propbability": 2, "ods": 50, "name": "LEGENDARY" },
-        { "symbol": "<:c25:710482155310022758>", "propbability": 4, "ods": 25, "name": "EPIC" },
-        { "symbol": "<:c10:710482151484817439>", "propbability": 8, "ods": 10, "name": "RARE" },
-        { "symbol": "<:c5:710482137895403520>", "propbability": 12, "ods": 5, "name": "UNCOMMON" },
-        { "symbol": "<:c1:710482104705613845>", "propbability": 24, "ods": 1, "name": "COMMON" }
-    ]
-
-    usr = load_user(ctx.guild.id, ctx.author.id)
-
-    if not "casino" in usr:
-        usr["casino"] = {}
-    if not "last_spin" in usr["casino"]:
-        usr["casino"]["last_spin"] = 0
-
-    if getts() - usr["casino"]["last_spin"] < 300:
-        await ctx.send("You have to wait " + sec2human(300 - (getts() - usr["casino"]["last_spin"])) + " for your next chance of a reward.")
-        return
-
-    total = 0
-    for outcome in ods:
-        total = total + outcome["propbability"]
-
-    rand = random.randint(0, total)
-    index = 0
-    out = None
-    while rand > 0:
-        outcome = ods[index]
-        rand = rand - outcome["propbability"]
-
-        if rand <= 0:
-            out = outcome
-            break
-        index = index + 1
-
-    embed = discord.Embed(
-        title = ctx.author.display_name + " spins the wheel ...",
-        description = "<a:spin:710491435006165032> | Spinning ...",
-        colour = discord.Colour.green()
-    )
-
-    msg = await ctx.send(embed=embed)
-
-    time.sleep(1)
-
-    embed = discord.Embed(
-        title = ctx.author.display_name + " Spun the wheel",
-        description = out["symbol"] + " | Landed on **" + out["name"] + "**\nYou got a bonus of +" + str(out["ods"]) + " coins",
-        colour = discord.Colour.green()
-    )
-
-    await msg.edit(embed=embed)
-
-    usr["coins"] = usr["coins"] + out["ods"]
-    usr["casino"]["last_spin"] = getts()
-    save_user(usr)
 
 # Moderation
 @bot.command(name="clear", help="Clears some messages from the history")
@@ -966,8 +784,8 @@ async def settings(ctx, action = None, key = None, value = None):
             await ctx.send(resp)
             return
 # Tickets
-@bot.command(name="ticket", help="Manages tickets")
-async def ticket(ctx, action = None, *, name = None):
+@bot.command(name="ticket_old", help="Manages tickets")
+async def ticket_old(ctx, action = None, *, name = None):
     srv = load_server(ctx.guild.id)
 
     if srv['tickets']['channel_closed'] is None or srv['tickets']['category'] is None:
@@ -1283,6 +1101,7 @@ def _get_loaded_cogs():
 
     return cogs
 
+# Load add cogs
 for filename in os.listdir('./cogs'):
     if filename.endswith('.py'):
         print("Loading cog: %s" % filename)

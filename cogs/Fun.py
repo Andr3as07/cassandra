@@ -1,5 +1,7 @@
 import discord
 import random
+import json
+import os
 from discord.ext import commands
 
 EMOJI_A = "🅰"
@@ -10,10 +12,21 @@ class Fun(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-        # TODO: Load wyr data
-        self.wyr_data = [
-            ["Would you rather Swim 300 meters through shit or dead bodies?", "Swim 300 meters through shit", "Swim 300 meters through dead bodies"]
-        ]
+        self.wyr_data = []
+        self._load_wyr_assets()
+
+    def _load_wyr_assets(self):
+        path = "assets/wyr.json"
+
+        if not os.path.exists(path):
+            return False
+
+        with open(path) as f:
+            jdata = json.load(f)
+
+            self.wyr_data = jdata["questions"]
+
+            return True
 
     def get_help_page(self):
         return {
@@ -48,11 +61,11 @@ class Fun(commands.Cog):
 
     @commands.command(name="wyr")
     async def wyr(self, ctx):
-        question = random.choice(self.wyr_data)
+        line = random.choice(self.wyr_data)
 
         embed = discord.Embed(
             title = "Would You Rather",
-            description = "**" + question[0] + "**\n\n\n" + EMOJI_A + " " + question[1] + "\n\n" + EMOJI_B + " " + question[2],
+            description = "**" + line["question"] + "**\n\n\n" + EMOJI_A + " " + line["answer_1"] + "\n\n" + EMOJI_B + " " + line["answer_2"],
             colour = discord.Colour.red()
         )
 

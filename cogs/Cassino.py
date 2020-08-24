@@ -1,6 +1,9 @@
-import discord
 import random
+import time
+
+import discord
 from discord.ext import commands
+from lib import util
 
 EMOJI_WARN = "⚠"
 EMOJI_ERROR = "❌"
@@ -141,6 +144,62 @@ class Cassino(commands.Cog):
     async def blackjack(self, ctx):
         await ctx.send("Not implemented")
 
+    # Casino
+    @commands.command(name="spin", help="Spin the wheel every 5 minutes for a reward.")
+    async def spin(self, ctx):
+        ods = [
+            { "symbol": "<:c500:710482148305403924>", "propbability": 1, "ods": 500, "name": "MYTHIC" },
+            { "symbol": "<:c100:710482154500653056>", "propbability": 2, "ods": 100, "name": "IMORTAL" },
+            { "symbol": "<:c50:710482156895469691>", "propbability": 4, "ods": 50, "name": "LEGENDARY" },
+            { "symbol": "<:c25:710482155310022758>", "propbability": 8, "ods": 25, "name": "EPIC" },
+            { "symbol": "<:c10:710482151484817439>", "propbability": 16, "ods": 10, "name": "RARE" },
+            { "symbol": "<:c5:710482137895403520>", "propbability": 24, "ods": 5, "name": "UNCOMMON" },
+            { "symbol": "<:c1:710482104705613845>", "propbability": 48, "ods": 1, "name": "COMMON" }
+        ]
+
+        usr = self.client.get_cog('Main').load_user(ctx.guild.id, ctx.author.id)
+
+        if util.getts() - usr.casino_last_spin < 300:
+            await ctx.send("You have to wait " + util.sec2human(300 - (util.getts() - usr.casino_last_spin)) + " for your next chance of a reward.")
+            return
+
+        total = 0
+        for outcome in ods:
+            total = total + outcome["propbability"]
+
+        rand = random.randint(0, total)
+        index = 0
+        out = None
+        while rand > 0:
+            outcome = ods[index]
+            rand = rand - outcome["propbability"]
+
+            if rand <= 0:
+                out = outcome
+                break
+            index = index + 1
+
+        embed = discord.Embed(
+            title = ctx.author.display_name + " spins the wheel ...",
+            description = "<a:spin:710491435006165032> | Spinning ...",
+            colour = discord.Colour.green()
+        )
+
+        msg = await ctx.send(embed=embed)
+
+        time.sleep(1)
+
+        embed = discord.Embed(
+            title = ctx.author.display_name + " Spun the wheel",
+            description = "%s | Landed on **%s**\nYou got a bonus of %s coins" % (out["symbol"], out["name"], out["ods"]),
+            colour = discord.Colour.green()
+        )
+
+        await msg.edit(embed=embed)
+
+        usr.balance = usr.balance + out["ods"]
+        usr.casino_last_spin = util.getts()
+        self.client.get_cog('Main').save_user(usr)
 
 def setup(client):
     client.add_cog(Cassino(client))
