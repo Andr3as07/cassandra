@@ -18,18 +18,6 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 PREFIX = '$'
 
-MSG_TIMEOUT = 60
-MSG_BONUS_COINS = 1
-MSG_BONUS_XP = 5
-
-REACTION_TIMEOUT = 60
-REACTION_BONUS_COINS = 1
-REACTION_BONUS_XP = 1
-
-VOICE_TIMEOUT = 5 * 60
-VOICE_BONUS_COINS = 1
-VOICE_BONUS_XP = 2
-
 NICKNAME_TIMEOUT=15*60
 
 HELP_TIMEOUT = 20
@@ -183,42 +171,6 @@ bot = commands.Bot(command_prefix=get_prefix)
 # Events
 # ==============================================================================
 
-@bot.event
-async def on_message(message):
-    print(message.content)
-    if message.author.bot == True:
-        return
-
-    # Do not do anything on private messages
-    if message.guild == None:
-        return
-
-    srv = load_server(message.guild.id)
-
-    # Check if the message was a command from a player
-    if not message.content.startswith(srv['prefix_used']):
-
-        # If the message is a command for another bot. Do not do anything
-        for pre in srv['prefix_blocked']:
-            if message.content.startswith(pre):
-                return
-
-        usr = load_user(message.guild.id, message.author.id)
-        usr['name'] = message.author.name
-        usr['msg']['last'] = getts()
-
-        # if msg timeout is reached award coins
-        if getts() - usr['msg']['awarded'] > MSG_TIMEOUT:
-            usr['msg']['awarded'] = getts()
-            usr['coins'] = usr['coins'] + MSG_BONUS_COINS
-            usr['xp'] = usr['xp'] + MSG_BONUS_XP
-
-        usr['msg']['count'] = usr['msg']['count'] + 1
-        save_user(usr)
-
-    # Continue command handling
-    await bot.process_commands(message)
-
 async def handle_help_reaction(reaction, user):
     hmsg = help_messages[reaction.message.id]
 
@@ -303,40 +255,41 @@ async def handle_rusr_reaction(reaction, user, game):
 
         rusr_messages[game_id] = game
 
-@bot.event
-async def on_reaction_add(reaction, user):
-    if user.bot == True:
-        return
+# FIX: This breakes rusr
+# @bot.event
+# async def on_reaction_add(reaction, user):
+#     if user.bot == True:
+#         return
 
-    # Do not do anything on private messages
-    if reaction.message.guild == None:
-        return
+#     # Do not do anything on private messages
+#     if reaction.message.guild == None:
+#         return
 
-    if reaction.message.id in help_messages:
-        await handle_help_reaction(reaction, user)
+#     if reaction.message.id in help_messages:
+#         await handle_help_reaction(reaction, user)
 
-    rusr_id = str(reaction.message.guild.id) + ":" + str(reaction.message.channel.id)
-    if rusr_id in rusr_messages:
-        rusr = rusr_messages[rusr_id]
-        if rusr["msg"].id == reaction.message.id:
-            await handle_rusr_reaction(reaction, user, rusr)
+#     rusr_id = str(reaction.message.guild.id) + ":" + str(reaction.message.channel.id)
+#     if rusr_id in rusr_messages:
+#         rusr = rusr_messages[rusr_id]
+#         if rusr["msg"].id == reaction.message.id:
+#             await handle_rusr_reaction(reaction, user, rusr)
 
-    # Do not count reactions to bots
-    if reaction.message.author.bot == True:
-        return
+#     # Do not count reactions to bots
+#     if reaction.message.author.bot == True:
+#         return
 
-    usr = load_user(reaction.message.guild.id, user.id)
-    usr['name'] = user.name
-    usr['msg']['last'] = getts()
+#     usr = load_user(reaction.message.guild.id, user.id)
+#     usr['name'] = user.name
+#     usr['msg']['last'] = getts()
 
-    # if msg timeout is reached award coins
-    if getts() - usr['reaction']['awarded'] > REACTION_TIMEOUT:
-        usr['reaction']['awarded'] = getts()
-        usr['coins'] = usr['coins'] + REACTION_BONUS_COINS
-        usr['xp'] = usr['xp'] + REACTION_BONUS_XP
+#     # if msg timeout is reached award coins
+#     if getts() - usr['reaction']['awarded'] > REACTION_TIMEOUT:
+#         usr['reaction']['awarded'] = getts()
+#         usr['coins'] = usr['coins'] + REACTION_BONUS_COINS
+#         usr['xp'] = usr['xp'] + REACTION_BONUS_XP
 
-    usr['reaction']['count'] = usr['reaction']['count'] + 1
-    save_user(usr)
+#     usr['reaction']['count'] = usr['reaction']['count'] + 1
+#     save_user(usr)
 
 @bot.event
 async def on_command_error(ctx, error):
@@ -903,41 +856,6 @@ async def ticket_old(ctx, action = None, *, name = None):
 # ==============================================================================
 # Tasks
 # ==============================================================================
-@tasks.loop(seconds=VOICE_TIMEOUT)
-async def update_voice():
-    print("Processing Voice Channel Memberships")
-
-    # For all voice channels on each guild
-    for guild in bot.guilds:
-
-        # Do not do anything for unavailable guilds
-        if guild.unavailable == True:
-            continue
-
-        for vchannel in guild.voice_channels:
-            vchmem = len(vchannel.members)
-
-            # No need to look into a voice channel with one or no active members
-            if vchmem < 2:
-                continue
-
-            # For each current member
-            for member in vchannel.members:
-                if member.voice.afk:
-                    continue
-                elif member.voice.deaf or member.voice.self_deaf:
-                    continue
-                elif member.voice.mute or member.voice.self_mute:
-                    continue
-
-                usr = load_user(guild.id, member.id)
-                usr['voice']['time'] = usr['voice']['time'] + VOICE_TIMEOUT
-                usr['coins'] = usr['coins'] + VOICE_BONUS_COINS
-
-                # Give an xp bonus for more people in the voicechat
-                usr['xp'] = usr['xp'] + VOICE_BONUS_XP + (vchmem - 2)
-
-                save_user(usr)
 
 @tasks.loop(seconds=NICKNAME_TIMEOUT)
 async def update_nicknames():
@@ -1107,7 +1025,6 @@ for filename in os.listdir('./cogs'):
         print("Loading cog: %s" % filename)
         bot.load_extension("cogs.%s" % filename[:-3])
 
-update_voice.start()
 update_nicknames.start()
 update_help.start()
 update_rusr.start()

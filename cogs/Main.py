@@ -9,32 +9,56 @@ class Main(commands.Cog):
     def __init__(self, client):
         self.client = client
 
+        self.cache_usr = {}
+        self.cache_srv = {}
+
     def load_user(self, srv, uid):
+        # Load server if needed
         if type(srv) is int:
             srv = self.load_server(srv)
 
-        print("LOD U %s %s" % (srv.ID, uid))
+        # Cache lookup
+        cache_id = "%s:%s" % (srv.ID, uid)
+        if cache_id in self.cache_usr:
+            return self.cache_usr[cache_id]
 
+        print("LOD U %s %s" % (srv.ID, uid))
         usr = User(srv, uid)
         usr.load()
+
+        # Populate cache
+        self.cache_usr[cache_id] = usr
+
         return usr
 
     def save_user(self, usr):
         print("SAV U %s %s" % (usr.server.ID, usr.ID))
-
         usr.save()
+
+        # Remove from cache
+        self.cache_usr.pop(usr.ID, None)
 
         return True
 
     def load_server(self, sid):
-        print("LOD S %s" % sid)
+        # Cache lookup
+        if sid in self.cache_srv:
+            return self.cache_srv[sid]
 
+        print("LOD S %s" % sid)
         srv = Server(sid)
         srv.load()
+
+        # Populate cache
+        self.cache_srv[sid] = srv
 
         return srv
 
     def save_server(self, srv):
+        # Remove from cache
+        self.cache_srv.pop(srv.ID, None)
+
+        # TODO: Implement
         return False
 
 
@@ -70,9 +94,11 @@ class Main(commands.Cog):
         )
         embed.set_thumbnail(url=discord_user.avatar_url)
 
-        embed.add_field(name=":writing_hand: Messages", value="Total: %s" % usr.msg_count, inline=True)
-        embed.add_field(name=":heart: Reactions", value="Total: %s" % usr.reaction_count, inline=True)
-        embed.add_field(name=":microphone2: Voice", value="Time: %s" % util.sec2human(usr.voice_time), inline=True)
+        stats = self.client.get_cog('Stats')
+        if stats is not None:
+            embed.add_field(name=":writing_hand: Messages", value="Total: %s" % stats.get_msg(usr), inline=True)
+            embed.add_field(name=":heart: Reactions", value="Total: %s" % stats.get_reaction(usr), inline=True)
+            embed.add_field(name=":microphone2: Voice", value="Time: %s" % util.sec2human(stats.get_voice(usr)), inline=True)
 
         await ctx.send(embed=embed)
 
