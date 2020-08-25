@@ -67,12 +67,12 @@ class Stats(commands.Cog):
             # Add balance if economy cog is loaded
             cecon = self.client.get_cog('Economy')
             if cecon is not None:
-                cecon.add_balance(REACTION_BONUS_COINS)
+                cecon.add_balance(usr, REACTION_BONUS_COINS)
 
             # Add xp if xp cog is loaded
             cxp = self.client.get_cog('Xp')
             if cxp is not None:
-                cxp.add_xp(REACTION_BONUS_XP)
+                cxp.add_xp(usr, REACTION_BONUS_XP)
 
         usr.reaction_count = usr.reaction_count + 1
 
@@ -114,12 +114,12 @@ class Stats(commands.Cog):
             # Add balance if economy cog is loaded
             cecon = self.client.get_cog('Economy')
             if cecon is not None:
-                cecon.add_balance(MSG_BONUS_COINS)
+                cecon.add_balance(usr, MSG_BONUS_COINS)
 
             # Add xp if xp cog is loaded
             cxp = self.client.get_cog('Xp')
             if cxp is not None:
-                cxp.add_xp(MSG_BONUS_XP)
+                cxp.add_xp(usr, MSG_BONUS_XP)
 
         self.client.get_cog('Main').save_user(usr)
 
@@ -157,7 +157,7 @@ class Stats(commands.Cog):
                     # Add balance if economy cog is loaded
                     cecon = self.client.get_cog('Economy')
                     if cecon is not None:
-                        cecon.add_balance(VOICE_BONUS_COINS)
+                        cecon.add_balance(usr, VOICE_BONUS_COINS)
 
                     # Add xp if xp cog is loaded
                     cxp = self.client.get_cog('Xp')
@@ -165,7 +165,7 @@ class Stats(commands.Cog):
 
                         # Give an xp bonus for more people in the voicechat
                         xp = xp = usr.xp + VOICE_BONUS_XP + (vchmem - 2)
-                        cxp.add_xp(xp)
+                        cxp.add_xp(usr, xp)
 
                     self.client.get_cog('Main').save_user(usr)
 
