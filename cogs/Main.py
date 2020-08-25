@@ -83,9 +83,15 @@ class Main(commands.Cog):
             await ctx.send("User not found.")
             return
 
-        content =             ":moneybag: Coins: %s" % usr.balance
-        content = content + "\n:star: XP:    %s" % usr.xp
-        # content = content + "\n:star2: Level: %s" % usr.level # TODO: FIX
+        content = ""
+        cecon = self.client.get_cog('Economy')
+        if cecon is not None:
+            content = content + ":moneybag: Coins: %s" % cecon.get_balance(usr)
+
+        cxp = self.client.get_cog('Xp')
+        if cxp is not None:
+            content = content + "\n:star: XP:    %s" % cxp.get_xp(usr)
+            content = content + "\n:star2: Level: %s" % cxp.get_level(usr)
 
         embed = discord.Embed(
             title = "Profile for %s on server %s" % (discord_user.name, ctx.guild.name),
