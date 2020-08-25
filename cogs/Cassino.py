@@ -8,6 +8,8 @@ from lib import util
 EMOJI_WARN = "⚠"
 EMOJI_ERROR = "❌"
 EMOJI_MONEY = ":moneybag:"
+IMAGE_TAILS = "https://i.imgur.com/i6XvztF.png"
+IMAGE_HEADS = "https://i.imgur.com/BvnksIe.png"
 
 class Cassino(commands.Cog):
     def __init__(self, client):
@@ -40,7 +42,11 @@ class Cassino(commands.Cog):
         return int(bet)
 
     async def _can_afford(self, ctx, usr, bet):
-        if bet > usr.balance:
+        cecon = self.client.get_cog('Economy')
+        if cecon is None:
+            await ctx.send(EMOJI_ERROR + " Betting for coins is not configured!")
+            return False
+        if not cecon.has_balance(usr, bet):
             await ctx.send(EMOJI_ERROR + " You can't afford this bet!")
             return False
 
@@ -83,10 +89,10 @@ class Cassino(commands.Cog):
         flip_str = None
         if flip == 1:
             flip_str = "tails"
-            thumbnail = "https://i.imgur.com/i6XvztF.png"
+            thumbnail = IMAGE_TAILS
         else:
             flip_str = "heads"
-            thumbnail = "https://i.imgur.com/BvnksIe.png"
+            thumbnail = IMAGE_HEADS
 
         won = (flip == rng_side)
 
@@ -96,17 +102,19 @@ class Cassino(commands.Cog):
         if won:
             color = discord.Colour.green()
             description = description + "You won"
-
-            if bet > 0:
-                usr.balance = usr.balance + bet
-                description = description + (" %s " % bet) + EMOJI_MONEY + ("\nYou now have %s " % usr.balance) + EMOJI_MONEY
         else:
             color = discord.Colour.red()
             description = description + "You lost"
 
-            if bet > 0:
-                usr.balance = usr.balance - bet
-                description = description + (" %s " % bet) + EMOJI_MONEY + ("\nYou now have %s " % usr.balance) + EMOJI_MONEY
+        if bet > 0:
+            cecon = self.client.get_cog('Economy') # This can always be found because of the _can_afford check
+
+            if won:
+                cecon.add_balance(usr, bet)
+            else:
+                cecon.add_balance(usr, -bet)
+
+            description = description + (" %s " % bet) + EMOJI_MONEY + ("\nYou now have %s " % usr.balance) + EMOJI_MONEY
 
         embed = discord.Embed(
             title = "Coinflip",
@@ -159,8 +167,9 @@ class Cassino(commands.Cog):
 
         usr = self.client.get_cog('Main').load_user(ctx.guild.id, ctx.author.id)
 
-        if util.getts() - usr.casino_last_spin < 300:
-            await ctx.send("You have to wait " + util.sec2human(300 - (util.getts() - usr.casino_last_spin)) + " for your next chance of a reward.")
+        ts = util.getts()
+        if ts - usr.casino_last_spin < 300:
+            await ctx.send("You have to wait " + util.sec2human(300 - (ts - usr.casino_last_spin)) + " for your next chance of a reward.")
             return
 
         total = 0
@@ -189,16 +198,24 @@ class Cassino(commands.Cog):
 
         time.sleep(1)
 
+        description = "%s | Landed on **%s**" % (out["symbol"], out["name"])
+
+        cecon = self.client.get_cog('Economy')
+        if cecon is not None:
+            description = description + ("\nYou got a reward of %s coins" % out["ods"])
+            cecon.add_balance(usr, out["ods"])
+        else:
+            description = description + ("\n\n%s You did not get a reward, because the economy is not setup!" % EMOJI_WARN)
+
         embed = discord.Embed(
             title = ctx.author.display_name + " Spun the wheel",
-            description = "%s | Landed on **%s**\nYou got a bonus of %s coins" % (out["symbol"], out["name"], out["ods"]),
+            description = description,
             colour = discord.Colour.green()
         )
 
         await msg.edit(embed=embed)
 
-        usr.balance = usr.balance + out["ods"]
-        usr.casino_last_spin = util.getts()
+        usr.casino_last_spin = ts
         self.client.get_cog('Main').save_user(usr)
 
 def setup(client):

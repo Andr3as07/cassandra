@@ -5,14 +5,26 @@ class Xp(commands.Cog):
     def __init__(self, client):
         self.client = client
 
+    def _get_user(self, u):
+        if type(u) is tuple:
+            return self.client.get_cog('Main').load_user(u[0], u[1])
+        return u
+
     def get_xp(self, u):
-        return 0 # Xp amt
+        usr = self._get_user(u)
+        return usr.xp # xp
 
     def set_xp(self, u, amt):
-        return 0 # Xp amt prev
+        usr = self._get_user(u)
+        old = usr.xp
+        usr.xp = amt
+        return old # Old xp
 
     def add_xp(self, u, amt):
-        return 0 # Xp amt new
+        usr = self._get_user(u)
+        old = usr.xp
+        usr.xp = old + amt
+        return usr.xp # New xp
 
     def get_level(self, u):
         xp = self.get_xp(u)

@@ -63,8 +63,16 @@ class Stats(commands.Cog):
         #if reaction timeout is reached award coins
         if ts - usr.reaction_awarded > REACTION_TIMEOUT:
             usr.reaction_awarded = ts
-            usr.balance = usr.balance + REACTION_BONUS_COINS # TODO: Use economy
-            usr.xp = usr.xp + REACTION_BONUS_XP # TODO: Use Xp
+
+            # Add balance if economy cog is loaded
+            cecon = self.client.get_cog('Economy')
+            if cecon is not None:
+                cecon.add_balance(REACTION_BONUS_COINS)
+
+            # Add xp if xp cog is loaded
+            cxp = self.client.get_cog('Xp')
+            if cxp is not None:
+                cxp.add_xp(REACTION_BONUS_XP)
 
         usr.reaction_count = usr.reaction_count + 1
 
@@ -102,8 +110,16 @@ class Stats(commands.Cog):
         #if msg timeout is reached award coins
         if ts - usr.msg_awarded > MSG_TIMEOUT:
             usr.msg_awarded = ts
-            usr.balance = usr.balance + MSG_BONUS_COINS # TODO: Use economy
-            usr.xp = usr.xp + MSG_BONUS_XP # TODO: Use Xp
+
+            # Add balance if economy cog is loaded
+            cecon = self.client.get_cog('Economy')
+            if cecon is not None:
+                cecon.add_balance(MSG_BONUS_COINS)
+
+            # Add xp if xp cog is loaded
+            cxp = self.client.get_cog('Xp')
+            if cxp is not None:
+                cxp.add_xp(MSG_BONUS_XP)
 
         self.client.get_cog('Main').save_user(usr)
 
@@ -137,10 +153,19 @@ class Stats(commands.Cog):
 
                     usr = self.client.get_cog('Main').load_user(guild.id, member.id)
                     usr.voice_time = usr.voice_time + VOICE_TIMEOUT
-                    usr.balance = usr.balance + VOICE_BONUS_COINS # TODO: Use economy
 
-                    # Give an xp bonus for more people in the voicechat
-                    usr.xp = usr.xp + VOICE_BONUS_XP + (vchmem - 2)
+                    # Add balance if economy cog is loaded
+                    cecon = self.client.get_cog('Economy')
+                    if cecon is not None:
+                        cecon.add_balance(VOICE_BONUS_COINS)
+
+                    # Add xp if xp cog is loaded
+                    cxp = self.client.get_cog('Xp')
+                    if cxp is not None:
+
+                        # Give an xp bonus for more people in the voicechat
+                        xp = xp = usr.xp + VOICE_BONUS_XP + (vchmem - 2)
+                        cxp.add_xp(xp)
 
                     self.client.get_cog('Main').save_user(usr)
 
