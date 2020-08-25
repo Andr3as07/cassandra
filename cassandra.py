@@ -418,26 +418,6 @@ async def rusr(ctx):
     }
 
 # Moderation
-@bot.command(name="clear", help="Clears some messages from the history")
-@commands.has_permissions(manage_messages=True)
-async def clear(ctx, amt = 10):
-    if not type(amt) is int:
-        try:
-            amt = int(amt, 10)
-        except ValueError:
-            await ctx.send("Invalid number of messages given")
-            return
-
-    if amt < 1:
-        await ctx.send("Can not remove " + str(amt) + " messages")
-        return
-    elif amt > 100:
-        amt = 100
-
-    await ctx.channel.purge(limit=amt + 1)
-
-    await print_audit(ctx.guild.id, "clear", ctx.author.id, "Cleared " + str(amt) + " messages from channel <#" + str(ctx.channel.id) + ">")
-
 @bot.command(name="kick", help="Kicks a user from the server")
 @commands.has_permissions(kick_members=True)
 async def kick(ctx, member : discord.Member, *, reason = None):
