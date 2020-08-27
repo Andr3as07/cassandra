@@ -22,6 +22,8 @@ class Server:
         self.tickets_next_id = 1
         self.tickets = []
 
+        self.role_commands = []
+
     def _get_dir_path(self):
         return "data/%s" % self.ID
 
@@ -70,7 +72,67 @@ class Server:
 
                 self.tickets_next_id = self.tickets.length() + 1
 
+            # Role Commands
+            if "role_commands" in jdata:
+                rc = jdata["role_commands"]
+
+                for groupname in rc:
+                    group = RoleGroup(groupname)
+                    jgroup = rc[groupname]
+
+                    if "timelimit" in jgroup:
+                        group.timelimit = jgroup["timelimit"]
+
+                    if "mode" in jgroup:
+                        group.mode = jgroup["mode"]
+
+                    if group.mode == "single":
+                        group.autoremove = jgroup["autoremove"]
+                    elif group.mode == "multiple":
+                        group.max = jgroup["max"]
+
+
+                    for rolename in jgroup["roles"]:
+                        role = RoleCommand(rolename)
+                        jrole = jgroup["roles"][rolename]
+
+                        role.role = jrole["role"]
+                        role.requires = jrole["requires"]
+
+                        group.roles.append(role)
+
+                    self.role_commands.append(group)
+
         return True
+
+class RoleGroup:
+    def __init__(self, name):
+        self.name = name
+
+        self.timelimit = None
+        self.requires = []
+
+        self.roles = []
+
+        self.type = "none" # none/single/multiple
+
+        # multiple
+        self.max = None
+
+        # single
+        self.autoremove = False
+
+class RoleCommand:
+    def __init__(self, name):
+        self.name = name
+        self.role = None
+        self.requires = []
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return self.__str__()
 
 class Ticket:
     def __init__(self, server, id):
