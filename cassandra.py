@@ -37,7 +37,6 @@ EMOJI_DEAD = "⚰"
 # Cache
 # ==============================================================================
 help_messages = {}
-rusr_messages = {}
 
 # ==============================================================================
 # Util
@@ -143,20 +142,6 @@ def get_help_page(index):
 
     return embed
 
-def get_rusr_fields(rusr, embed):
-    if len(rusr["alive"]) > 1:
-        s = ""
-        for u in rusr["alive"]:
-            s = s + "<@" + str(u) + ">\n"
-        embed.add_field(name=":busts_in_silhouette: Active Players", value=s, inline=True)
-
-    s = ""
-    for u in rusr["dead"]:
-        s = s + "<@" + str(u) + ">\n"
-    embed.add_field(name=":skull: Graveyard", value=s, inline=True)
-
-    return embed
-
 def get_prefix(client, message):
     # Do not do anything on private messages
     if message.guild == None:
@@ -210,96 +195,6 @@ async def handle_help_reaction(reaction, user):
 
     if embed is not None:
         await reaction.message.edit(embed=embed)
-
-async def handle_rusr_reaction(reaction, user, game):
-    game_id = str(game["guild"].id) + ":" + str(game["channel"].id)
-    if game["state"] == "setup":
-        if reaction.emoji != EMOJI_JOIN:
-            await reaction.remove(user)
-            return
-
-        if user.id in game["alive"]:
-            await reaction.message.channel.send(content="<@" + str(user.id) + "> You are already in the game.", delete_after=5)
-            return
-
-        game["alive"].append(user.id)
-        await reaction.message.channel.send("<@" + str(user.id) + "> Joined the game.", delete_after=5)
-        rusr_messages[game_id] = game
-
-    elif game["state"] == "running":
-        print("Running")
-        if reaction.emoji != EMOJI_FIRE:
-            await reaction.remove(user)
-            return
-        if not user.id == game["alive"][game["index"]]:
-            await reaction.remove(user)
-            return
-
-        kill = random.randint(0, 6)
-        if kill == 0:
-            # Kill
-            pass
-        else:
-            # Alive
-
-            embed = discord.Embed(
-                title = "Russian Roulette",
-                description = "<@" + str(game["alive"][game["index"]]) + "> lives to see another day..."
-            )
-            # TODO: Add alive
-            # TODO: Add dead
-
-            game["index"] = game["index"] + 1
-
-        game["index"] = game["index"] % len(game["alive"])
-
-        rusr_messages[game_id] = game
-
-# FIX: This breakes rusr
-# @bot.event
-# async def on_reaction_add(reaction, user):
-#     if user.bot == True:
-#         return
-
-#     # Do not do anything on private messages
-#     if reaction.message.guild == None:
-#         return
-
-#     if reaction.message.id in help_messages:
-#         await handle_help_reaction(reaction, user)
-
-#     rusr_id = str(reaction.message.guild.id) + ":" + str(reaction.message.channel.id)
-#     if rusr_id in rusr_messages:
-#         rusr = rusr_messages[rusr_id]
-#         if rusr["msg"].id == reaction.message.id:
-#             await handle_rusr_reaction(reaction, user, rusr)
-
-#     # Do not count reactions to bots
-#     if reaction.message.author.bot == True:
-#         return
-
-#     usr = load_user(reaction.message.guild.id, user.id)
-#     usr['name'] = user.name
-#     usr['msg']['last'] = getts()
-
-#     # if msg timeout is reached award coins
-#     if getts() - usr['reaction']['awarded'] > REACTION_TIMEOUT:
-#         usr['reaction']['awarded'] = getts()
-#         usr['coins'] = usr['coins'] + REACTION_BONUS_COINS
-#         usr['xp'] = usr['xp'] + REACTION_BONUS_XP
-
-#     usr['reaction']['count'] = usr['reaction']['count'] + 1
-#     save_user(usr)
-
-@bot.event
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.CommandNotFound):
-        await ctx.send("Command not found")
-    elif isinstance(error, commands.MissingPermissions):
-        await ctx.send("Missing Permissions")
-    else:
-        await ctx.send("Error while executing the command.")
-        print(str(type(error)) + ": " + str(error))
 
 # ==============================================================================
 # Commands
@@ -390,32 +285,6 @@ async def help(ctx):
     await msg.add_reaction(EMOJI_PREVIOUS)
     await msg.add_reaction(EMOJI_NEXT)
     await msg.add_reaction(EMOJI_LAST)
-
-# Fun
-@bot.command(name="rusr", help="Plays a round of russian roulette")
-async def rusr(ctx):
-    id = str(ctx.guild.id) + ":" + str(ctx.channel.id)
-
-    if id in rusr_messages:
-        await ctx.send("A russian roulette is already in progress in this channel.")
-        return
-
-    msg = await ctx.send("<@" + str(ctx.author.id) + "> has initiated a game of RussianRoulette in this channel!\nReact with " + EMOJI_JOIN +" to join. You have 20.0 seconds to participate.")
-
-    await msg.add_reaction(EMOJI_JOIN)
-
-    rusr_messages[id] = {
-        "msg": msg,
-        "guild": ctx.guild,
-        "channel": ctx.channel,
-        "time": getts(),
-        "uid": ctx.author.id,
-        "state": "setup",
-        "alive": [
-            ctx.author.id
-        ],
-        "dead": []
-    }
 
 # Moderation
 @bot.command(name="history", help="Displays a users moderation history.")
@@ -773,115 +642,6 @@ async def update_help():
 
             help_messages.pop(hmsgid)
 
-@tasks.loop(seconds=RUSR_TIMEOUT)
-async def update_rusr():
-    if len(rusr_messages) == 0:
-        return
-
-    print("Processing RusR Messages")
-
-    for id in rusr_messages:
-        game = rusr_messages[id]
-        guild = game["guild"]
-
-        # Do not do anything for unavailable guilds
-        if guild.unavailable == True:
-            continue
-
-        ts = game["time"]
-        tsd = getts() - ts
-        state = game["state"]
-        msg = game["msg"]
-
-        if state == "setup" and tsd > 20:
-            if len(game["alive"]) < 2:
-                rusr_messages.pop(id, None)
-
-                await msg.clear_reactions()
-                await msg.edit(content="Not enougth players joined the game.", delete_after=5)
-                return
-
-            game["state"] = "running"
-            game["index"] = 0
-            game["time"] = getts()
-
-            print(game)
-
-            current = game["alive"][game["index"]]
-            print(current)
-            embed = discord.Embed(
-                title = "Russian Roulette",
-                description = "<@" + str(current) + ">, it is now your turn. React with " + EMOJI_FIRE + " to pull the trigger..."
-            )
-            # Alive / Graveyard
-            get_rusr_fields(game, embed)
-
-            await msg.clear_reactions()
-            await msg.edit(embed=embed)
-            await msg.add_reaction(EMOJI_FIRE)
-
-            rusr_messages[id] = game
-
-        elif state == "running" and tsd > 20:
-            old = game["alive"][game["index"]]
-            # Kill current player because of inactivity
-            game["alive"].remove(old)
-            game["dead"].append(old)
-
-            print(game)
-            # Determine current player
-            current = game["alive"][game["index"]]
-            game["index"] = game["index"] % len(game["alive"])
-
-            if len(game["alive"]) == 1:
-                # One player left
-
-                embed = discord.Embed(
-                    title = "Russian Roulette",
-                    description = "<@" + str(old) + "> died of old age.",
-                    colour = discord.Colour.red()
-                )
-                # Alive / Graveyard
-                get_rusr_fields(game, embed)
-
-                await msg.clear_reactions()
-                await msg.edit(embed=embed)
-
-                game["state"] = "winner"
-
-            else:
-                # More than one player left
-                embed = discord.Embed(
-                    title = "Russian Roulette",
-                    description = "<@" + str(old) + "> died of old age.\n<@" + str(current) + ">, it is now your turn. React with " + EMOJI_FIRE + " to pull the trigger...",
-                    colour = discord.Colour.red()
-                )
-                # Alive / Graveyard
-                get_rusr_fields(game, embed)
-
-                await msg.clear_reactions()
-                await msg.edit(embed=embed)
-                await msg.add_reaction(EMOJI_FIRE)
-
-            game["time"] = getts()
-            rusr_messages[id] = game
-
-        elif state == "winner" and tsd > 20:
-            current = game["alive"][0]
-            user = bot.get_user(current)
-            embed = discord.Embed(
-                title = "Russian Roulette",
-                description = "<@" + str(current) + "> is the lone survivor. Congratulations!",
-                colour = discord.Colour.green()
-            )
-            embed.set_thumbnail(url=user.avatar_url)
-
-            # Alive / Graveyard
-            get_rusr_fields(game, embed)
-
-            await msg.edit(embed=embed)
-            rusr_messages.pop(id)
-
 def _get_loaded_cogs():
     cogs = []
     for filename in os.listdir('./cogs'):
@@ -901,7 +661,6 @@ for filename in os.listdir('./cogs'):
 
 update_nicknames.start()
 update_help.start()
-update_rusr.start()
 print(f'Cassandra has connected to Discord!')
 
 bot.run(TOKEN)

@@ -9,7 +9,6 @@ class Moderation(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-
     @commands.command(name="warn")
     @commands.has_permissions(manage_messages=True)
     async def warn(self, ctx, member : discord.Member, *, reason = None):
