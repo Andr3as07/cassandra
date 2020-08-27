@@ -13,7 +13,10 @@ class Fun(commands.Cog):
         self.client = client
 
         self.wyr_data = []
+        self.fortunes = {}
+
         self._load_wyr_assets()
+        self._load_fortune_assets()
 
     def _load_wyr_assets(self):
         path = "assets/wyr.json"
@@ -26,7 +29,27 @@ class Fun(commands.Cog):
 
             self.wyr_data = jdata["questions"]
 
+            print("Loaded WYR Data")
             return True
+
+    def _load_fortune_assets(self):
+        dir_path = "assets/fortunes"
+
+        if not os.path.exists(dir_path):
+            return False
+
+        for filename in os.listdir(dir_path):
+            if not filename.endswith(".json"):
+                continue
+
+            path = dir_path + "/" + filename
+            with open(path) as f:
+                jdata = json.load(f)
+
+                self.fortunes[filename[:-5]] = jdata["fortunes"]
+                print("Loaded fortune database %s" % filename)
+
+        return True
 
     def get_help_page(self):
         return {
@@ -35,7 +58,7 @@ class Fun(commands.Cog):
             "content": {
                 "8ball <Question ...>": "Ask the magic 8ball.",
                 #"conn <User>": "Starts a game of connect-4 against the mentioned user.",
-                #"fortune": "Opens a fortune cookie.",
+                "fortune": "Opens a fortune cookie.",
                 #"rusr": "Plays a round of russian roulette.",
                 #"tord": "Play a game of truth or dare.",
                 #"ttt <User>": "Starts a game of Tick-Tack-Toe.",
@@ -49,7 +72,16 @@ class Fun(commands.Cog):
 
     @commands.command(name="fortune")
     async def fortune(self, ctx):
-        await ctx.send("Not implemented")
+
+        # TODO: Handle dictionary is empty
+
+        db = random.choice(list(self.fortunes.keys()))
+
+        # TODO: Handle db is empty
+
+        line = random.choice(self.fortunes[db])
+
+        await ctx.send(line)
 
     @commands.command(name="tord")
     async def tord(self, ctx):

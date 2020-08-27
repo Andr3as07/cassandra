@@ -9,6 +9,7 @@ import math
 import discord
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
+from lib import util
 
 # ==============================================================================
 # Config
@@ -188,7 +189,7 @@ async def handle_help_reaction(reaction, user):
         embed = get_help_page(page_index)
 
         hmsg["page"] = page_index
-        hmsg["time"] = getts()
+        hmsg["time"] = util.getts()
         help_messages[reaction.message.id] = hmsg
 
         await reaction.remove(user)
@@ -276,7 +277,7 @@ async def help(ctx):
         "msg": msg,
         "gid": ctx.guild.id,
         "cid": ctx.channel.id,
-        "time": getts(),
+        "time": util.getts(),
         "page": 0,
         "uid": ctx.author.id
     }
@@ -628,8 +629,8 @@ async def update_help():
 
     for hmsgid in help_messages:
         hmsg = help_messages[hmsgid]
-        print(getts() - hmsg["time"])
-        if getts() - hmsg["time"] > 60:
+        print(util.getts() - hmsg["time"])
+        if util.getts() - hmsg["time"] > 60:
             try:
                 msg = hmsg["msg"]
 
