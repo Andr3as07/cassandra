@@ -188,6 +188,10 @@ class Cassino(commands.Cog):
                 break
             index = index + 1
 
+        # FIX: This is a drity fix, as we should never end up here
+        if out is None:
+            out = ods[0]
+
         embed = discord.Embed(
             title = ctx.author.display_name + " spins the wheel ...",
             description = "<a:spin:710491435006165032> | Spinning ...",

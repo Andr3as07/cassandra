@@ -1,4 +1,3 @@
-# bot.py
 import os
 import json
 import random
@@ -17,12 +16,8 @@ from lib import util
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-PREFIX = '$'
-
-NICKNAME_TIMEOUT=15*60
 
 HELP_TIMEOUT = 20
-RUSR_TIMEOUT = 5
 
 EMOJI_FIRST = "⏮"
 EMOJI_PREVIOUS = "◀"
@@ -30,9 +25,6 @@ EMOJI_NEXT = "▶"
 EMOJI_LAST = "⏭"
 EMOJI_CLOSE = "⏹"
 EMOJI_JOIN = "🆗"
-EMOJI_FIRE = "🔫"
-EMOJI_ALIVE = "👥"
-EMOJI_DEAD = "⚰"
 
 # ==============================================================================
 # Cache
@@ -87,14 +79,6 @@ def load_server(gid, create = True):
                 'list': {}
             }
         }
-
-def save_user(usr):
-    path = get_user_path(usr['gid'], usr['uid'])
-
-    os.makedirs(get_server_path(usr['gid']), exist_ok=True)
-
-    with open(path, 'w') as f:
-        json.dump(usr, f, indent=2, sort_keys=True)
 
 def load_user(gid, uid, create = True):
     path = get_user_path(gid, uid)
@@ -342,34 +326,6 @@ async def history(ctx, member : discord.Member):
     embed.add_field(name=":warning: Warnings", value=str(warnings), inline=True)
     await ctx.send(embed=embed)
 
-@bot.command(name="whois", help="Get's information about a user")
-@commands.has_permissions(manage_messages=True)
-async def whois(ctx, member : discord.Member):
-    usr = load_user(ctx.guild.id, member.id, False)
-    if usr is None:
-        await ctx.send("Couldn't get user information")
-        return
-
-    title = member.name + "#" + member.discriminator
-    if member.nick is not None:
-        title = title + " (" + member.nick + ")"
-
-    nicknames = "No nicknames tracked"
-    if len(usr["nicknames"]) > 0:
-        nicknames = "```" + ', '.join(usr['nicknames']) + '```'
-
-    embed = discord.Embed(
-        title = title
-    )
-    embed.set_thumbnail(url=member.avatar_url)
-
-    embed.add_field(name="ID", value=str(member.id))
-    embed.add_field(name="Account Created", value=str(member.created_at), inline=True)
-    embed.add_field(name="Joined At", value=str(member.joined_at), inline=True)
-    embed.add_field(name="Nicknames", value=nicknames)
-
-    await ctx.send(embed=embed)
-
 # Settings
 
 @bot.command(name="settings", help="Allows the admin to configure the bot")
@@ -601,25 +557,6 @@ async def ticket_old(ctx, action = None, *, name = None):
 # Tasks
 # ==============================================================================
 
-@tasks.loop(seconds=NICKNAME_TIMEOUT)
-async def update_nicknames():
-    print("Processing Nickname Changes")
-
-    for guild in bot.guilds:
-        # Do not do anything for unavailable guilds
-        if guild.unavailable == True:
-            continue
-
-        for member in guild.members:
-            if member.bot:
-                continue
-
-            if member.nick is not None:
-                usr = load_user(guild.id, member.id)
-                if not member.nick in usr['nicknames']:
-                    usr['nicknames'].append(member.nick)
-                    save_user(usr)
-
 @tasks.loop(seconds=HELP_TIMEOUT)
 async def update_help():
     if len(help_messages) == 0:
@@ -660,7 +597,6 @@ for filename in os.listdir('./cogs'):
         print("Loading cog: %s" % filename)
         bot.load_extension("cogs.%s" % filename[:-3])
 
-update_nicknames.start()
 update_help.start()
 print(f'Cassandra has connected to Discord!')
 
