@@ -1,6 +1,37 @@
 import os
 import json
 
+class CassandraConfig:
+    def __init__(self, path):
+        self.path = path
+
+        self.cogs = {}
+
+    def load(self):
+        if not os.path.isfile(self.path):
+            return False
+
+        with open(self.path) as f:
+            jdata = json.load(f)
+
+            if "cogs" in jdata:
+                jcogs = jdata["cogs"]
+                for cogname in jcogs:
+                    jcog = jcogs[cogname]
+                    cog = CassandraConfigCog(cogname)
+
+                    if "autoload" in jcog:
+                        cog.autoload = jcog["autoload"]
+
+                    self.cogs[cogname] = cog
+
+        return True
+
+class CassandraConfigCog:
+    def __init__(self, name):
+        self.name = name
+        self.autoload = False
+
 class Server:
     def __init__(self, id):
         self.ID = id
@@ -23,6 +54,9 @@ class Server:
         self.tickets = []
 
         self.role_commands = []
+
+        self.level_roles = {}
+        self.level_roles_channel = None
 
     def _get_dir_path(self):
         return "data/%s" % self.ID
@@ -70,7 +104,18 @@ class Server:
 
                 # TODO: Parse tickets
 
-                self.tickets_next_id = self.tickets.length() + 1
+                self.tickets_next_id = len(self.tickets) + 1
+
+            # Level Roles
+            if "level_roles" in jdata:
+                jlrdata = jdata["level_roles"]
+
+                # TODO: Channel
+
+                # Levels
+                if "level" in jlrdata:
+                    for lv in jlrdata["level"]:
+                        self.level_roles[lv] = jlrdata["level"][lv]
 
             # Role Commands
             if "role_commands" in jdata:

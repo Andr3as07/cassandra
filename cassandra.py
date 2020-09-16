@@ -8,7 +8,7 @@ import math
 import discord
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
-from lib import util
+from lib import util, data
 
 # ==============================================================================
 # Config
@@ -223,18 +223,69 @@ help_pages_old = [
 
 # Debug
 @bot.command(name="load")
-async def load(ctx, extension):
-    bot.load_extension(f'cogs.{extension}')
+@commands.has_permissions(administrator=True)
+async def load(ctx, name):
+    cog = None
+
+    for cogname in cfg.cogs:
+        if cogname == name:
+            cog = cfg.cogs[cogname]
+            break
+
+    if cog is None:
+        await ctx.send("No cog with name %s found!" % name)
+        return
+
+    if cog in active_cogs:
+        await ctx.send("Cog %s is already loaded! You may want to use Reload!" % name)
+        return
+
+    bot.load_extension("cogs.%s" % name)
+
+    active_cogs.append(cog)
+
+    await ctx.send("Cog %s loaded." % name)
 
 @bot.command(name="unload")
-async def unload(ctx, extension):
-    bot.unload_extension(f'cogs.{extension}')
+@commands.has_permissions(administrator=True)
+async def unload(ctx, name):
+    cog = None
+    for c in active_cogs:
+        if c.name == name:
+            cog = c
+            break
 
+    if cog is None:
+        await ctx.send("No active cog with name %s found!" % name)
+        return
+
+    active_cogs.remove(cog)
+    bot.unload_extension("cogs.%s" % name)
+
+    await ctx.send("Cog %s unloaded." % name)
 
 @bot.command(name="reload")
-async def reload(ctx, extension):
-    bot.unload_extension(f'cogs.{extension}')
-    bot.load_extension(f'cogs.{extension}')
+@commands.has_permissions(administrator=True)
+async def reload(ctx, name):
+    cog = None
+
+    for cogname in cfg.cogs:
+        if cogname == name:
+            cog = cfg.cogs[cogname]
+            break
+
+    if cog is None:
+        await ctx.send("No cog with name %s found!" % name)
+        return
+
+    if cog in active_cogs:
+        bot.unload_extension("cogs.%s" % name)
+
+    bot.load_extension("cogs.%s" % name)
+
+    active_cogs.append(cog)
+
+    await ctx.send("Cog %s reloaded." % name)
 
 # General
 bot.remove_command('help')
@@ -246,12 +297,16 @@ async def help(ctx):
     # TODO: Update help pages
     if help_pages is None:
         help_pages = []
-        for cogname in _get_loaded_cogs():
+        for cog in active_cogs:
             try:
-                page = bot.get_cog(cogname).get_help_page()
+                page = bot.get_cog(cog.name).get_help_page()
                 help_pages.append(page)
             except:
                 pass
+
+    if len(help_pages) < 1:
+        await ctx.send("Failed to display help pages.")
+        return
 
     embed = get_help_page(0)
 
@@ -470,24 +525,26 @@ async def update_help():
 
             help_messages.pop(hmsgid)
 
-def _get_loaded_cogs():
-    cogs = []
-    for filename in os.listdir('./cogs'):
-        if filename.endswith('.py'):
-            cogname = filename[:-3]
-            cog = bot.get_cog(cogname)
-            if cog is not None:
-                cogs.append(cogname)
+print("Starting Cassandra Bot...")
 
-    return cogs
+# Load config
+print("Loading global bot configuration...")
+cfg = data.CassandraConfig("data/config.json")
+cfg.load()
+print("Finished loading global bot configuration.")
 
-# Load add cogs
-for filename in os.listdir('./cogs'):
-    if filename.endswith('.py'):
-        print("Loading cog: %s" % filename)
-        bot.load_extension("cogs.%s" % filename[:-3])
+print("Initializing autoload cogs...")
+active_cogs = []
+for cogname in cfg.cogs:
+    cog = cfg.cogs[cogname]
+    if cog.autoload == True:
+        print("Autoloading cog: %s" % cog.name)
+        bot.load_extension("cogs.%s" % cog.name)
+        active_cogs.append(cog)
+print("Finished initializing autoload cogs.")
 
 update_help.start()
 print(f'Cassandra has connected to Discord!')
+print("Finished starting Cassandra Bot.")
 
 bot.run(TOKEN)

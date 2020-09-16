@@ -1,0 +1,13 @@
+{
+    "cogs": {
+        "Main": { "autoload": true },
+        "Xp": { "autoload": true },
+        "Economy": { "autoload": true },
+        "Stats": { "autoload": true },
+        "Cassino": { "autoload": true },
+        "Fun": { "autoload": true },
+        "RoleCommands": { "autoload": true },
+        "Moderation": { "autoload": true },
+        "Tracker": { "autoload": true }
+    }
+}
