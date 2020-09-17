@@ -142,6 +142,7 @@ bot = commands.Bot(command_prefix=get_prefix)
 # ==============================================================================
 
 async def handle_help_reaction(reaction, user):
+    global help_messages
     hmsg = help_messages[reaction.message.id]
 
     if hmsg["uid"] != user.id:
@@ -181,27 +182,30 @@ async def handle_help_reaction(reaction, user):
     if embed is not None:
         await reaction.message.edit(embed=embed)
 
+@bot.event
+async def on_reaction_add(reaction, user):
+    if user.bot == True:
+        return
+
+    # Do not do anything on private messages
+    if reaction.message.guild is None:
+        return
+
+    if reaction.message.id in help_messages:
+        await handle_help_reaction(reaction, user)
+
 # ==============================================================================
 # Commands
 # ==============================================================================
 
 help_pages = None
 
-help_pages_old = [
-    {
-        "title": "General Commands",
-        "description": None,
-        "content": {
-            "help": "Shows this help dialog.",
-            "profile  [user]": "Shows a users profile."
-        }
-    }
-]
-
 # Debug
 @bot.command(name="load")
 @commands.has_permissions(administrator=True)
 async def load(ctx, name):
+    global help_pages
+
     cog = None
 
     for cogname in cfg.cogs:
@@ -220,12 +224,15 @@ async def load(ctx, name):
     bot.load_extension("cogs.%s" % name)
 
     active_cogs.append(cog)
+    help_pages = None # Clear help page cache
 
     await ctx.send("Cog %s loaded." % name)
 
 @bot.command(name="unload")
 @commands.has_permissions(administrator=True)
 async def unload(ctx, name):
+    global help_pages
+
     cog = None
     for c in active_cogs:
         if c.name == name:
@@ -238,12 +245,15 @@ async def unload(ctx, name):
 
     active_cogs.remove(cog)
     bot.unload_extension("cogs.%s" % name)
+    help_pages = None # Clear help page cache
 
     await ctx.send("Cog %s unloaded." % name)
 
 @bot.command(name="reload")
 @commands.has_permissions(administrator=True)
 async def reload(ctx, name):
+    global help_pages
+
     cog = None
 
     for cogname in cfg.cogs:
@@ -257,10 +267,12 @@ async def reload(ctx, name):
 
     if cog in active_cogs:
         bot.unload_extension("cogs.%s" % name)
+    else:
+        active_cogs.append(cog)
 
     bot.load_extension("cogs.%s" % name)
 
-    active_cogs.append(cog)
+    help_pages = None # Clear help page cache
 
     await ctx.send("Cog %s reloaded." % name)
 
@@ -273,6 +285,7 @@ async def help(ctx):
 
     # TODO: Update help pages
     if help_pages is None:
+        print("Creating help page cache")
         help_pages = []
         for cog in active_cogs:
             try:
@@ -364,11 +377,13 @@ async def help(ctx):
 
 @tasks.loop(seconds=HELP_TIMEOUT)
 async def update_help():
+    global help_messages
     if len(help_messages) == 0:
         return
 
     print("Processing Help Messages")
 
+    new_help_messages = {}
     for hmsgid in help_messages:
         hmsg = help_messages[hmsgid]
         print(util.getts() - hmsg["time"])
@@ -383,7 +398,10 @@ async def update_help():
             except Exception:
                 print(ex)
 
-            help_messages.pop(hmsgid)
+        else:
+            new_help_messages[hmsgid] = hmsg
+
+    help_messages = new_help_messages
 
 print("Starting Cassandra Bot...")
 
