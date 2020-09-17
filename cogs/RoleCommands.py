@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands
 from discord.utils import get
 
+from lib import libcassandra as cassandra
+
 class RoleCommands(commands.Cog):
     def __init__(self, client):
         self.client = client
@@ -39,7 +41,7 @@ class RoleCommands(commands.Cog):
 
     @commands.command(name="role")
     async def role(self, ctx, role = None):
-        srv = self.client.get_cog('Main').load_server(ctx.guild.id)
+        srv = cassandra.load_server(ctx.guild.id)
         if role is None:
             # Print all roles on the server
             await self._print_roles(ctx, srv)

@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands, tasks
 from discord.utils import get
 
+from lib import libcassandra as cassandra
+
 UPDATE_TIMEOUT = 3600
 
 class LevelRoles(commands.Cog):
@@ -21,7 +23,7 @@ class LevelRoles(commands.Cog):
             if guild.unavailable == True:
                 continue
 
-            srv = self.client.get_cog('Main').load_server(guild.id)
+            srv = cassandra.load_server(guild.id)
 
             # If no level roles are configured, ignore
             if len(srv.level_roles) == 0:
