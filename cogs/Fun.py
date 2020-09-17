@@ -13,11 +13,14 @@ class Fun(commands.Cog):
         self.client = client
 
         self.wyr_data = []
+        self.whatami_data = []
+        self.eightball_data = []
         self.fortunes = {}
 
         self._load_wyr_assets()
         self._load_fortune_assets()
         self._load_whatami_assets()
+        self._load_8ball_assets()
 
     def _load_wyr_assets(self):
         path = "assets/wyr.json"
@@ -66,6 +69,20 @@ class Fun(commands.Cog):
         print("Loaded whatami Data")
         return True
 
+    def _load_8ball_assets(self):
+        path = "assets/8ball.json"
+
+        if not os.path.exists(path):
+            return False
+
+        with open(path) as f:
+            jdata = json.load(f)
+
+            self.eightball_data = jdata["answers"]
+
+        print("Loaded 8ball Data")
+        return True
+
     def get_help_page(self):
         return {
             "title": "Fun Commands",
@@ -81,7 +98,6 @@ class Fun(commands.Cog):
                 "whatami": "You better have thick skin...or a thick skull!"
             }
         }
-
 
     @commands.command(name="whatami")
     async def whatami(self, ctx):
@@ -129,33 +145,8 @@ class Fun(commands.Cog):
         await msg.add_reaction(EMOJI_B)
 
     @commands.command(name="8ball")
-    async def eight_ball(self, ctx):
-        answers = [
-            "It is certain.",
-            "It is decidedly so.",
-            "Without a doubt.",
-            "Yes – definitely.",
-            "You may rely on it.",
-            "As I see it, yes.",
-            "Most likely.",
-            "Outlook good.",
-            "Yes.",
-            "Signs point to yes.",
-
-            "Reply hazy, try again."
-            "Ask again later.",
-            "Better not tell you now.",
-            "Cannot predict now.",
-            "Concentrate and ask again.",
-
-            "Don't count on it.",
-            "My reply is no.",
-            "My sources say no.",
-            "Outlook not so good.",
-            "Very doubtful.",
-        ]
-
-        await ctx.send(EMOJI_8BALL + " " + random.choice(answers))
+    async def eightball(self, ctx):
+        await ctx.send(EMOJI_8BALL + " " + random.choice(self.eightball_data))
 
 def setup(client):
     client.add_cog(Fun(client))
