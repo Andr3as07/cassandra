@@ -7,6 +7,7 @@
         "Cassino": { "autoload": true },
         "Fun": { "autoload": true },
         "RoleCommands": { "autoload": true },
+        "LevelRoles": { "autoload": true },
         "Moderation": { "autoload": true },
         "Tracker": { "autoload": true },
         "Tickets": { "autoload": false }
