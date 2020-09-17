@@ -4,6 +4,7 @@ import time
 import discord
 from discord.ext import commands
 from lib import util
+from lib import libcassandra as cassandra
 
 EMOJI_WARN = "⚠"
 EMOJI_ERROR = "❌"
@@ -41,12 +42,12 @@ class Cassino(commands.Cog):
         # At this point the number can not be negative
         return int(bet)
 
-    async def _can_afford(self, ctx, usr, bet):
+    async def _can_afford(self, ctx, u, bet):
         cecon = self.client.get_cog('Economy')
         if cecon is None:
             await ctx.send(EMOJI_ERROR + " Betting for coins is not configured!")
             return False
-        if not cecon.has_balance(usr, bet):
+        if not cecon.has_balance(u, bet):
             await ctx.send(EMOJI_ERROR + " You can't afford this bet!")
             return False
 
@@ -68,7 +69,7 @@ class Cassino(commands.Cog):
 
         usr = None
         if bet > 0:
-            usr = self.client.get_cog('Main').load_user(ctx.guild.id, ctx.author.id)
+            usr = cassandra.get_user((ctx.guild.id, ctx.author.id))
 
             #  Check if the user of this command has that much money
             if not await self._can_afford(ctx, usr, bet):
@@ -126,7 +127,7 @@ class Cassino(commands.Cog):
         await ctx.send(embed=embed)
 
         if usr:
-            self.client.get_cog('Main').save_user(usr)
+            cassandra.save_user(usr)
 
     @commands.command(name="lottery")
     async def lottery(self, ctx):
@@ -165,7 +166,7 @@ class Cassino(commands.Cog):
             { "symbol": "<:c1:710482104705613845>", "propbability": 48, "ods": 1, "name": "COMMON" }
         ]
 
-        usr = self.client.get_cog('Main').load_user(ctx.guild.id, ctx.author.id)
+        usr = cassandra.get_user((ctx.guild.id, ctx.author.id))
 
         ts = util.getts()
         if ts - usr.casino_last_spin < 300:
@@ -200,6 +201,7 @@ class Cassino(commands.Cog):
 
         msg = await ctx.send(embed=embed)
 
+        # FIX: Replace this with a timer, because this forces only one player (in al servers) to be able to spin at once
         time.sleep(1)
 
         description = "%s | Landed on **%s**" % (out["symbol"], out["name"])
@@ -220,7 +222,7 @@ class Cassino(commands.Cog):
         await msg.edit(embed=embed)
 
         usr.casino_last_spin = ts
-        self.client.get_cog('Main').save_user(usr)
+        cassandra.save_user(usr)
 
 def setup(client):
     client.add_cog(Cassino(client))

@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands, tasks
 from lib import util
 
+from lib import libcassandra as cassandra
+
 MSG_TIMEOUT = 60
 MSG_BONUS_COINS = 1
 MSG_BONUS_XP = 5
@@ -18,21 +20,16 @@ class Stats(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    def _get_user(self, u):
-        if type(u) is tuple:
-            return self.client.get_cog('Main').load_user(u[0], u[1])
-        return u
-
     def get_msg(self, u):
-        usr = self._get_user(u)
+        usr = cassandra.get_user(u)
         return usr.msg_count
 
     def get_reaction(self, u):
-        usr = self._get_user(u)
+        usr = cassandra.get_user(u)
         return usr.reaction_count
 
     def get_voice(self, u):
-        usr = self._get_user(u)
+        usr = cassandra.get_user(u)
         return usr.voice_time
 
     @commands.Cog.listener()
@@ -41,6 +38,7 @@ class Stats(commands.Cog):
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
+        print("Reaction")
         # Ignore reactions from bots
         if user.bot == True:
             return
@@ -53,14 +51,14 @@ class Stats(commands.Cog):
         if reaction.message.author.bot == True:
             return
 
-        usr = self.client.get_cog('Main').load_user(reaction.message.guild.id, user.id)
+        usr = cassandra.get_user(u)
 
         # TODO: Handle user not found
 
         ts = util.getts()
         usr.reaction_last = ts
 
-        #if reaction timeout is reached award coins
+        # if reaction timeout is reached award coins
         if ts - usr.reaction_awarded > REACTION_TIMEOUT:
             usr.reaction_awarded = ts
 
@@ -76,7 +74,7 @@ class Stats(commands.Cog):
 
         usr.reaction_count = usr.reaction_count + 1
 
-        self.client.get_cog('Main').save_user(usr)
+        cassandra.save_user(usr)
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -88,7 +86,7 @@ class Stats(commands.Cog):
         if message.guild is None:
             return
 
-        srv = self.client.get_cog('Main').load_server(message.guild.id)
+        srv = cassandra.get_server(message.guild.id)
         # TODO: Check if server is not found
 
         # Ignore commands to cassandra
@@ -100,7 +98,7 @@ class Stats(commands.Cog):
             if message.content.startswith(prefix):
                 return
 
-        usr = self.client.get_cog('Main').load_user(srv, message.author.id)
+        usr = cassandra.get_user((srv, message.author.id))
         # TODO: Check if user is not found
 
         ts = util.getts()
@@ -121,7 +119,7 @@ class Stats(commands.Cog):
             if cxp is not None:
                 cxp.add_xp(usr, MSG_BONUS_XP)
 
-        self.client.get_cog('Main').save_user(usr)
+        cassandra.save_user(usr)
 
     @tasks.loop(seconds=VOICE_TIMEOUT)
     async def update_voice(self):
@@ -151,7 +149,7 @@ class Stats(commands.Cog):
                     elif member.voice.mute or member.voice.self_mute:
                         continue
 
-                    usr = self.client.get_cog('Main').load_user(guild.id, member.id)
+                    usr = cassandra.load_user((guild.id, member.id))
                     usr.voice_time = usr.voice_time + VOICE_TIMEOUT
 
                     # Add balance if economy cog is loaded
@@ -167,7 +165,7 @@ class Stats(commands.Cog):
                         xp = xp = usr.xp + VOICE_BONUS_XP + (vchmem - 2)
                         cxp.add_xp(usr, xp)
 
-                    self.client.get_cog('Main').save_user(usr)
+                    cassandra.save_user(usr)
 
 def setup(client):
     client.add_cog(Stats(client))

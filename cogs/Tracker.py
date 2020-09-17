@@ -1,45 +1,42 @@
 import discord
 from discord.ext import commands, tasks
 
+from lib import libcassandra as cassandra
+
 UPDATE_TIMEOUT = 3600
 
 class Tracker(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    def _get_user(self, u):
-        if type(u) is tuple:
-            return self.client.get_cog('Main').load_user(u[0], u[1])
-        return u
-
     def get_nicknames(self, u):
-        usr = self._get_user(u)
+        usr = cassandra.get_user(u)
         return usr.nicknames
 
     def get_names(self, u):
-        usr = self._get_user(u)
+        usr = cassandra.get_user(u)
         return usr.names
 
     def add_nickname(self, u, dusr):
-        usr = self._get_user(u)
+        usr = cassandra.get_user(u)
 
         if dusr.nick is None:
-            return False
+            return False # Has no nick
 
         if dusr.nick in usr.nicknames:
-            return False
+            return False # Known nick
 
         usr.nicknames.append(dusr.nick)
 
         return True # New nick
 
     def add_name(self, u, dusr):
-        usr = self._get_user(u)
+        usr = cassandra.get_user(u)
 
         name = dusr.name + "#" + dusr.discriminator
 
         if name in usr.names:
-            return False
+            return False # Known name
 
         usr.names.append(name)
 
@@ -52,7 +49,7 @@ class Tracker(commands.Cog):
     @commands.command(name="whois")
     @commands.has_permissions(manage_messages=True)
     async def whois(self, ctx, member : discord.Member):
-        usr = self._get_user((ctx.guild.id, member.id))
+        usr = cassandra.get_user((ctx.guild.id, member.id))
         if usr is None:
             await ctx.send("Couldn't get user information")
             return
@@ -86,7 +83,7 @@ class Tracker(commands.Cog):
 
     @commands.Cog.listener() # Username, discriminator
     async def on_member_join(self, member):
-        usr = self._get_user((member.guild.id, member.id))
+        usr = cassandra.get_user((member.guild.id, member.id))
 
         update = False
 
@@ -97,21 +94,21 @@ class Tracker(commands.Cog):
             update = True
 
         if update:
-            self.client.get_cog('Main').save_user(usr)
+            cassandra.save_user(usr)
 
     @commands.Cog.listener() # Nickname
     async def on_member_update(self, before, after):
-        usr = self._get_user((after.guild.id, after.id))
+        usr = cassandra.get_user((after.guild.id, after.id))
 
         if self.add_nickname(usr, after):
-            self.client.get_cog('Main').save_user(usr)
+            cassandra.save_user(usr)
 
     @commands.Cog.listener() # Username, discriminator
     async def on_user_join(self, member):
-        usr = self._get_user((member.guild.id, member.id))
+        usr = cassandra.get_user((member.guild.id, member.id))
 
         if self.add_nickname(usr, member):
-            self.client.get_cog('Main').save_user(usr)
+            cassandra.save_user(usr)
 
     @tasks.loop(seconds=UPDATE_TIMEOUT)
     async def update(self):
@@ -127,7 +124,7 @@ class Tracker(commands.Cog):
                 if member.bot:
                     continue
 
-                usr = self._get_user((guild.id, member.id))
+                usr = cassandra.get_user((guild.id, member.id))
                 self.add_nickname(usr, member)
                 self.add_name(usr, member)
 

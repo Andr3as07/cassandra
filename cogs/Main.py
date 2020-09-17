@@ -2,66 +2,14 @@ import discord
 import os
 import json
 from discord.ext import commands
+
 from lib.data import User, Server
 from lib import util
+from lib import libcassandra as cassandra
 
 class Main(commands.Cog):
     def __init__(self, client):
         self.client = client
-
-        self.cache_usr = {}
-        self.cache_srv = {}
-
-    def load_user(self, srv, uid):
-        # Load server if needed
-        if type(srv) is int:
-            srv = self.load_server(srv)
-
-        # Cache lookup
-        cache_id = "%s:%s" % (srv.ID, uid)
-        if cache_id in self.cache_usr:
-            return self.cache_usr[cache_id]
-
-        print("LOD U %s %s" % (srv.ID, uid))
-        usr = User(srv, uid)
-        usr.load()
-
-        # Populate cache
-        self.cache_usr[cache_id] = usr
-
-        return usr
-
-    def save_user(self, usr):
-        print("SAV U %s %s" % (usr.server.ID, usr.ID))
-        usr.save()
-
-        # Remove from cache
-        self.cache_usr.pop(usr.ID, None)
-
-        return True
-
-    def load_server(self, sid):
-        # Cache lookup
-        if sid in self.cache_srv:
-            return self.cache_srv[sid]
-
-        print("LOD S %s" % sid)
-        srv = Server(sid)
-        srv.load()
-
-        # Populate cache
-        self.cache_srv[sid] = srv
-
-        return srv
-
-    def save_server(self, srv):
-        print("SAV S %s" % srv.ID)
-        srv.save()
-
-        # Remove from cache
-        self.cache_srv.pop(srv.ID, None)
-
-        return True
 
     @commands.command(name="profile", help="Shows the profile.")
     async def profile(self, ctx, name = None):
@@ -74,8 +22,8 @@ class Main(commands.Cog):
             if name.startswith("<@!") and name.endswith(">"):
                 uid = name[3:len(name) - 1]
 
-        usr = self.load_user(ctx.guild.id, uid)
-        if usr == None:
+        usr = cassandra.load_user((ctx.guild.id, uid))
+        if usr is None:
             await ctx.send("User not found.")
             return
 

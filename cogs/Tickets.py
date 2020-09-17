@@ -3,15 +3,11 @@ from discord.ext import commands
 from discord.utils import get
 
 from lib.data import Ticket
+from lib import libcassandra as cassandra
 
 class Tickets(commands.Cog):
     def __init__(self, client):
         self.client = client
-
-    def _get_user(self, u):
-        if type(u) is tuple:
-            return self.client.get_cog('Main').load_user(u[0], u[1])
-        return u
 
     def get_help_page(self):
         return {
@@ -27,10 +23,10 @@ class Tickets(commands.Cog):
         }
 
     async def open(self, dguild, duser, name):
-        usr = self._get_user((dguild.id, duser.id))
+        srv = cassandra.get_server(dguild.id)
 
         # Get category
-        cat = get(dguild.categories, id=usr.server.tickets_category)
+        cat = get(dguild.categories, id=srv.tickets_category)
         if cat is None:
             return False, "Server not set up"
 
@@ -43,22 +39,22 @@ class Tickets(commands.Cog):
         }
 
         # Admins
-        for adminrole in usr.server.tickets_roles_admin:
+        for adminrole in srv.tickets_roles_admin:
             role = get(dguild.roles, id=adminrole)
             if role is None:
                 continue
             overwrites[role] = perm
 
         # Moderators
-        for modrole in usr.server.tickets_roles_moderator:
+        for modrole in srv.tickets_roles_moderator:
             role = get(dguild.roles, id=modrole)
             if role is None:
                 continue
             overwrites[role] = perm
 
         # Find out the next ticket id
-        id = usr.server.tickets_next_id
-        usr.server.tickets_next_id = usr.server.tickets_next_id + 1
+        id = srv.tickets_next_id
+        srv.tickets_next_id = srv.tickets_next_id + 1
 
         chname = str("%s %s" % (id, name))
 
@@ -66,15 +62,15 @@ class Tickets(commands.Cog):
         channel = await dguild.create_text_channel(chname, overwrites=overwrites, category=cat, reason="Ticket %s created by %s#%s" % (id, duser.name, duser.discriminator))
 
         # Create ticket object
-        ticket = Ticket(usr.server, id, name, channel.id, False, [duser.id], "open")
-        usr.server.tickets.append(ticket)
+        ticket = Ticket(srv, id, name, channel.id, False, [duser.id], "open")
+        srv.tickets.append(ticket)
 
-        self.client.get_cog('Main').save_server(usr.server)
+        cassandra.save_server(srv)
 
         # Send intial message
         embed = discord.Embed(
             title = "Welcome " + duser.name,
-            description = "Please describe the reasoning for opening this ticket, include any information you think may be relevant such as proof, other third parties and so on.\n\nUse the following command to close the ticket\n `" + usr.server.prefix_used + "ticket close [reason for closing]`")
+            description = "Please describe the reasoning for opening this ticket, include any information you think may be relevant such as proof, other third parties and so on.\n\nUse the following command to close the ticket\n `" + srv.prefix_used + "ticket close [reason for closing]`")
 
         await channel.send(embed=embed)
 
@@ -83,10 +79,10 @@ class Tickets(commands.Cog):
         return True, ticket
 
     async def close(self, dguild, duser, channel):
-        usr = self._get_user((dguild.id, duser.id))
+        srv = cassandra.get_server(dguild.id)
 
         ticket = None
-        for t in usr.server.tickets:
+        for t in srv.tickets:
             if t.channel == channel.id:
                 ticket = t
                 break
@@ -101,7 +97,7 @@ class Tickets(commands.Cog):
         # Update ticket
         ticket.status = "closed"
         ticket.channel = None
-        self.client.get_cog('Main').save_server(usr.server)
+        cassandra.save_server(srv)
 
         # Remove channel
         await channel.delete(reason="Ticket " + str(ticket.ID) + " closed by " + duser.name + "#" + str(duser.discriminator))
@@ -119,7 +115,7 @@ class Tickets(commands.Cog):
 
     @commands.command(name="ticket")
     async def ticket(self, ctx, action=None, *, name=None):
-        srv = self.client.get_cog('Main').load_server(ctx.guild.id)
+        srv = cassandra.get_server(ctx.guild.id)
 
         if srv.tickets_channel_closed is None or srv.tickets_category is None:
             await ctx.send("The ticket system is not set up. Please contect an administrator.")
