@@ -17,6 +17,7 @@ class Fun(commands.Cog):
 
         self._load_wyr_assets()
         self._load_fortune_assets()
+        self._load_whatami_assets()
 
     def _load_wyr_assets(self):
         path = "assets/wyr.json"
@@ -51,6 +52,20 @@ class Fun(commands.Cog):
 
         return True
 
+    def _load_whatami_assets(self):
+        path = "assets/whatami.json"
+
+        if not os.path.exists(path):
+            return False
+
+        with open(path) as f:
+            jdata = json.load(f)
+
+            self.whatami_data = jdata["quotes"]
+
+        print("Loaded whatami Data")
+        return True
+
     def get_help_page(self):
         return {
             "title": "Fun Commands",
@@ -63,8 +78,15 @@ class Fun(commands.Cog):
                 #"tord": "Play a game of truth or dare.",
                 #"ttt <User>": "Starts a game of Tick-Tack-Toe.",
                 "wyr": "Displays a would you rather question.",
+                "whatami": "You better have thick skin...or a thick skull!"
             }
         }
+
+
+    @commands.command(name="whatami")
+    async def whatami(self, ctx):
+        quote = random.choice(self.whatami_data)
+        await ctx.send(quote)
 
     @commands.command(name="conn")
     async def conn(self, ctx):
