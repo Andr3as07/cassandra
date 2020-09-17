@@ -51,7 +51,7 @@ class Stats(commands.Cog):
         if reaction.message.author.bot == True:
             return
 
-        usr = cassandra.get_user(u)
+        usr = cassandra.get_user((reaction.message.guild.id, user.id))
 
         # TODO: Handle user not found
 

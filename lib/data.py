@@ -118,8 +118,6 @@ class Server:
 
                 self.tickets_next_id = len(self.tickets) + 1
 
-                print(self.tickets_channel_closed, self.tickets_channel_updates, self.tickets_category)
-
             # Level Roles
             if "level_roles" in jdata:
                 jlrdata = jdata["level_roles"]

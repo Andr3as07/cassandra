@@ -9,6 +9,7 @@ import discord
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
 from lib import util, data
+from lib import libcassandra as cassandra
 
 # ==============================================================================
 # Config
@@ -23,8 +24,6 @@ EMOJI_FIRST = "⏮"
 EMOJI_PREVIOUS = "◀"
 EMOJI_NEXT = "▶"
 EMOJI_LAST = "⏭"
-EMOJI_CLOSE = "⏹"
-EMOJI_JOIN = "🆗"
 
 # ==============================================================================
 # Cache
@@ -34,86 +33,6 @@ help_messages = {}
 # ==============================================================================
 # Util
 # ==============================================================================
-
-def get_server_path(gid):
-    return "data/" + str(gid)
-
-def get_user_path(gid, uid):
-    return get_server_path(gid) + "/" + str(uid) + ".json"
-
-def save_server(srv):
-    path = get_server_path(srv['gid']) + "/config.json"
-
-    os.makedirs(get_server_path(srv['gid']), exist_ok=True)
-
-    with open(path, 'w') as f:
-        json.dump(srv, f, indent=2, sort_keys=True)
-
-def load_server(gid, create = True):
-    path = get_server_path(gid) + "/config.json"
-
-    if os.path.isfile(path):
-        with open(path) as f:
-            return json.load(f)
-    else:
-        if create == False:
-            return None
-
-        return {
-            'gid': gid,
-            'prefix_used': '$',
-            'prefix_blocked': [],
-            'audit_log': {
-                'channel': None,
-                'clear': True,
-                'warn': True,
-                'kick': True,
-                'block': True
-            },
-            'roles_admin': [],
-            'roles_mod': [],
-            'tickets': {
-                'channel_updates': None,
-                'channel_closed': None,
-                'next': 1,
-                'list': {}
-            }
-        }
-
-def load_user(gid, uid, create = True):
-    path = get_user_path(gid, uid)
-
-    if os.path.isfile(path):
-        with open(path) as f:
-            return json.load(f)
-    else:
-        if create == False:
-            return None
-
-        return {
-            'gid': gid,
-            'uid': uid,
-            'coins': 0,
-            'xp': 0,
-            'msg': {
-                'last': 0,
-                'awarded': 0,
-                'count': 0
-            },
-            'reaction': {
-                'last': 0,
-                'awarded': 0,
-                'count': 0
-            },
-            'voice': {
-                'time': 0
-            },
-            'history': [],
-            'nicknames': [],
-            'casino': {
-                'last_spin': 0
-            }
-        }
 
 def get_help_page(index):
     page = help_pages[index]
@@ -132,7 +51,7 @@ def get_prefix(client, message):
     if message.guild == None:
         return str(random.randrange(-99999999, 99999999))
 
-    srv = bot.get_cog('Main').load_server(message.guild.id)
+    srv = cassandra.get_server(message.guild)
     return srv.prefix_used
 
 bot = commands.Bot(command_prefix=get_prefix)
@@ -221,10 +140,20 @@ async def load(ctx, name):
         await ctx.send("Cog %s is already loaded! You may want to use Reload!" % name)
         return
 
+    # Dispatch preload event
+    response = cassandra.Dispach("cog-loading", type('',(object,),{"name":name, "cancel":False})())
+
+    if response.cancel == True:
+        await ctx.send("Cog %s has been stoped form loading!" % name)
+        return
+
     bot.load_extension("cogs.%s" % name)
 
     active_cogs.append(cog)
     help_pages = None # Clear help page cache
+
+    # Disptch event
+    cassandra.Dispach("cog-loaded", type('',(object,),{"name":name})())
 
     await ctx.send("Cog %s loaded." % name)
 
@@ -243,9 +172,21 @@ async def unload(ctx, name):
         await ctx.send("No active cog with name %s found!" % name)
         return
 
+    # Dispatch preload event
+    response = cassandra.Dispach("cog-unloading", type('',(object,),{"name":name, "cancel":False})())
+
+    if response.cancel == True:
+        await ctx.send("Cog %s has been stoped form unloading!" % name)
+        return
+
+    # TODO: Unregister all event handlers for this cog
+
     active_cogs.remove(cog)
     bot.unload_extension("cogs.%s" % name)
     help_pages = None # Clear help page cache
+
+    # Disptch event
+    cassandra.Dispach("cog-unloaded", type('',(object,),{"name":name})())
 
     await ctx.send("Cog %s unloaded." % name)
 
@@ -253,6 +194,8 @@ async def unload(ctx, name):
 @commands.has_permissions(administrator=True)
 async def reload(ctx, name):
     global help_pages
+
+    # TODO: Maybe we need to dispatch events here to
 
     cog = None
 

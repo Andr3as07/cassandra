@@ -24,7 +24,12 @@ class Tracker(commands.Cog):
             return False # Has no nick
 
         if dusr.nick in usr.nicknames:
+            # Dispatch event
+            cassandra.dispatch("nickname-change", {"user":usr,"nick":dusr.nick,"known":True})
             return False # Known nick
+
+        # Dispatch event
+        cassandra.dispatch("nickname-change", {"user":usr,"nick":dusr.nick,"known":False})
 
         usr.nicknames.append(dusr.nick)
 
@@ -36,7 +41,12 @@ class Tracker(commands.Cog):
         name = dusr.name + "#" + dusr.discriminator
 
         if name in usr.names:
+            # Dispatch event
+            cassandra.dispatch("name-change", {"user":usr,"name":name,"known":True})
             return False # Known name
+
+        # Dispatch event
+        cassandra.dispatch("name-change", {"user":usr,"name":dusr.nick,"known":False})
 
         usr.names.append(name)
 

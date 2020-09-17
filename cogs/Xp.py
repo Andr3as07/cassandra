@@ -15,13 +15,21 @@ class Xp(commands.Cog):
     def set_xp(self, u, amt):
         usr = cassandra.get_user(u)
         old = usr.xp
-        usr.xp = amt
+
+        resp = cassandra.dispatch("xp-change", {"old":old,"new":amt,"user":usr})
+
+        usr.xp = resp.new
+
         return old # Old xp
 
     def add_xp(self, u, amt):
         usr = cassandra.get_user(u)
         old = usr.xp
-        usr.xp = old + amt
+        new = old + amt
+
+        resp = cassandra.dispatch("xp-change", {"old":old,"new":new,"user":usr})
+
+        usr.xp = resp.new
         return usr.xp # New xp
 
     def get_level(self, u):

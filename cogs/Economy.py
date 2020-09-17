@@ -14,13 +14,19 @@ class Economy(commands.Cog):
     def set_balance(self, u, amt):
         usr = cassandra.get_user(u)
         old = usr.balance
-        usr.balance = amt
+
+        resp = cassandra.dispatch("balance-change", {"old":old,"new":amt,"user":usr})
+
+        usr.balance = resp.new
         return old # Old balance
 
     def add_balance(self, u, amt):
         usr = cassandra.get_user(u)
         old = usr.balance
-        usr.balance = old + amt
+
+        resp = cassandra.dispatch("balance-change", {"old":old,"new":old+amt,"user":usr})
+
+        usr.balance = resp.new
         return usr.balance # New balance
 
     def has_balance(self, u, amt):
