@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 
+from lib import libcassandra as cassandra
+
 EMOJI_INFO = ":information_source:"
 EMOJI_BAN = ":no_entry_sign:"
 EMOJI_WARN = ":warning:"
@@ -34,16 +36,22 @@ class Moderation(commands.Cog):
             else:
                 await caudit.print_audit(ctx.author, 'warning', "Warned %s#%s for **\"%s\"**." % (member.name, member.discriminator, reason))
 
+        reason_str = reason
         if reason is None:
-            reason = "No reason given"
+            reason_str = "No reason given"
 
         embed = discord.Embed(
             title = "%s %s: You have been warned!" % (EMOJI_WARN, ctx.guild.name),
-            description = "Reason: %s" % reason,
+            description = "Reason: %s" % reason_str,
             colour = discord.Colour.gold()
         )
 
         await member.send(embed=embed)
+
+        usr = cassandra.get_user((guild.id, member.id))
+
+        # Dispatch event
+        cassandra.dispatch("mod-warning", {"dauthor":ctx.author,"reason":reason,"duser":member,"user":usr})
 
         # TODO: Append to user history
         # usr = load_user(ctx.guild.id, member.id)
@@ -80,6 +88,11 @@ class Moderation(commands.Cog):
 
         # We need to send the message first because discord does not let you send messages to users that have no servers in common
         await member.send(embed=embed)
+
+        usr = cassandra.get_user((guild.id, member.id))
+
+        # Dispatch event
+        cassandra.dispatch("mod-ban", {"dauthor":ctx.author,"reason":reason,"duser":member,"user":usr})
 
         await member.ban(reason=reason)
 
@@ -118,6 +131,11 @@ class Moderation(commands.Cog):
         # We need to send the message first because discord does not let you send messages to users that have no servers in common
         await member.send(embed=embed)
 
+        usr = cassandra.get_user((guild.id, member.id))
+
+        # Dispatch event
+        cassandra.dispatch("mod-kick", {"dauthor":ctx.author,"reason":reason,"duser":member,"user":usr})
+
         await member.kick(reason=reason)
 
         # TODO: User history
@@ -153,6 +171,9 @@ class Moderation(commands.Cog):
         caudit = self.client.get_cog('Audit')
         if caudit is not None:
             await caudit.print_audit(ctx.author, 'clear', "Cleared %s messages from channel <#%s>" % (amt, ctx.channel.id))
+
+        # Dispatch event
+        cassandra.dispatch("mod-clear", {"dauthor":ctx.author,"amount":amt,"channel":ctx.channel})
 
 def setup(client):
     client.add_cog(Moderation(client))

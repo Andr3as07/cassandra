@@ -8,10 +8,6 @@ class RoleCommands(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        print('Bot is online.')
-
     async def _print_roles(self, ctx, srv, title = "Here is a list of available roles"):
         # Print all roles on the server
         if len(srv.role_commands) == 0:
@@ -90,9 +86,13 @@ class RoleCommands(commands.Cog):
         if has_role:
             await ctx.author.remove_roles(drole, reason="Role command")
             await ctx.send("Took away your %s role!" % drole.name)
+
+            cassandra.dispatch("rolecmd-remove", {"duser":ctx.author,"drole":drole,"role":role,"group":group})
         else:
             await ctx.author.add_roles(drole, reason="Role command")
             await ctx.send("Gave you the %s role!" % drole.name)
+
+            cassandra.dispatch("rolecmd-add", {"duser":ctx.author,"drole":drole,"role":role,"group":group})
 
         # TODO: Set timer to handle timelimit
 
