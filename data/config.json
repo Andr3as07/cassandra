@@ -8,6 +8,7 @@
         "Fun": { "autoload": true },
         "RoleCommands": { "autoload": true },
         "Moderation": { "autoload": true },
-        "Tracker": { "autoload": true }
+        "Tracker": { "autoload": true },
+        "Tickets": { "autoload": false }
     }
 }

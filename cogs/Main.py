@@ -55,12 +55,13 @@ class Main(commands.Cog):
         return srv
 
     def save_server(self, srv):
+        print("SAV S %s" % srv.ID)
+        srv.save()
+
         # Remove from cache
         self.cache_srv.pop(srv.ID, None)
 
-        # TODO: Implement
-        return False
-
+        return True
 
     @commands.command(name="profile", help="Shows the profile.")
     async def profile(self, ctx, name = None):

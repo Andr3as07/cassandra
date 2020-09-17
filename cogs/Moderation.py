@@ -9,6 +9,20 @@ class Moderation(commands.Cog):
     def __init__(self, client):
         self.client = client
 
+    def get_help_page(self):
+        return {
+            "title": "Moderation Commands",
+            "description": "These commands require moderation or administrator permissions.",
+            "content": {
+                "clear [count = 10]": "Clears the chat.",
+                "ban <user> [reason...]": "Bans a user from the server.",
+                "kick <user> [reason...]": "Kicks a user from the server.",
+                "warn <user> [reason...]": "Warns a user.",
+                # "history <user>": "Gets the moderation history for a user.",
+                "whois <user>": "Displays some extended information about a user."
+            }
+        }
+
     @commands.command(name="warn")
     @commands.has_permissions(manage_messages=True)
     async def warn(self, ctx, member : discord.Member, *, reason = None):

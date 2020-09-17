@@ -43,13 +43,13 @@ class Server:
         self.audit_log_clear = True
         self.audit_log_warn = True
         self.audit_log_kick = True
-        self.audit_log_block = True
-
-        self.roles_admin = []
-        self.roles_mod = []
+        self.audit_log_ban = True
 
         self.tickets_channel_updates = None
         self.tickets_channel_closed = None
+        self.tickets_category = None
+        self.tickets_roles_admin = []
+        self.tickets_roles_moderator = []
         self.tickets_next_id = 1
         self.tickets = []
 
@@ -87,24 +87,38 @@ class Server:
                 self.audit_log_clear = jdata["audit"]["clear"]
                 self.audit_log_warn = jdata["audit"]["warn"]
                 self.audit_log_kick = jdata["audit"]["kick"]
-                self.audit_log_block = jdata["audit"]["block"]
-
-            # Roles list
-            if "roles_admin" in jdata:
-                self.roles_admin = jdata["roles_admin"]
-            if "roles_mod" in jdata:
-                self.roles_mod = jdata["roles_mod"]
+                self.audit_log_ban = jdata["audit"]["ban"]
 
             # Tickets
             if "tickets" in jdata:
-                if "tickets_channel_closed" in jdata["tickets"]:
-                    self.tickets_channel_closed = jdata["tickets"]["chennel_closed"]
-                if "tickets_channel_updates" in jdata["tickets"]:
-                    self.tickets_channel_updates = jdata["tickets"]["chennel_updates"]
+                if "channel_closed" in jdata["tickets"]:
+                    self.tickets_channel_closed = jdata["tickets"]["channel_closed"]
+                if "channel_updates" in jdata["tickets"]:
+                    self.tickets_channel_updates = jdata["tickets"]["channel_updates"]
+                if "category" in jdata["tickets"]:
+                    self.tickets_category = jdata["tickets"]["category"]
 
-                # TODO: Parse tickets
+                # Parse tickets
+                if "list" in jdata["tickets"]:
+                    jlist = jdata["tickets"]["list"]
+
+                    for ticket_id, jticket in jlist.items():
+                        ticket = Ticket(self, int(ticket_id), jticket["name"])
+
+                        if "admin_only" in jticket:
+                            ticket.admin_only = jticket["admin_only"]
+                        if "status" in jticket:
+                            ticket.status = jticket["status"]
+                        if "users" in jticket:
+                            ticket.users = jticket["users"]
+                        if "channel" in jticket:
+                            ticket.channel = jticket["channel"]
+
+                        self.tickets.append(ticket)
 
                 self.tickets_next_id = len(self.tickets) + 1
+
+                print(self.tickets_channel_closed, self.tickets_channel_updates, self.tickets_category)
 
             # Level Roles
             if "level_roles" in jdata:
@@ -150,6 +164,80 @@ class Server:
 
         return True
 
+    def save(self):
+        path = self._get_path()
+
+        os.makedirs(self._get_dir_path(), exist_ok=True)
+
+        with open(path, 'w') as f:
+            data = {
+                'prefix_used': self.prefix_used,
+                'prefix_blocked': self.prefix_blocked,
+                'audit': {
+                    'channel': self.audit_channel,
+                    'ban': self.audit_log_ban,
+                    'clear': self.audit_log_clear,
+                    'kick': self.audit_log_kick,
+                    'warn': self.audit_log_warn
+                },
+                'tickets': {
+                    'category': self.tickets_category,
+                    'channel_closed': self.tickets_channel_closed,
+                    'channel_updates': self.tickets_channel_updates,
+                    'roles_admin': self.tickets_roles_admin,
+                    'roles_moderator': self.tickets_roles_moderator
+                },
+                'level_roles': {
+                    'channel': self.level_roles_channel,
+                    'level': self.level_roles
+                },
+                'role_commands': {}
+            }
+
+            # Tickets list
+            tlist = {}
+            for ticket in self.tickets:
+                tentry = {
+                    'admin_only': ticket.admin_only,
+                    'channel': ticket.channel,
+                    'id': ticket.ID,
+                    'name': ticket.name,
+                    'status': ticket.status,
+                    'users': ticket.users
+                }
+                tlist[ticket.ID] = tentry
+            data["tickets"]["list"] = tlist
+
+            # Role commands
+            rgroups = {}
+            for rgroup in self.role_commands:
+                rgroupdata = {
+                    'mode': rgroup.mode,
+                    'timelimit': rgroup.timelimit,
+                    'requires': rgroup.requires
+                }
+                if rgroup.mode == "multiple":
+                    rgroupdata["max"] = rgroup.max
+                elif rgroup.mode == "single":
+                    rgroupdata["autoremove"] = rgroup.autoremove
+
+                rolelist = {}
+                for role in rgroup.roles:
+                    roledata = {
+                        'role': role.role,
+                        'requires': role.requires
+                    }
+                    rolelist[role.name] = roledata
+                rgroupdata["roles"] = rolelist
+                rgroups[rgroup.name] = rgroupdata
+            data["role_commands"] = rgroups
+
+            json.dump(data, f, indent=2, sort_keys=True)
+
+            return True
+
+        return False # We should never end up here
+
 class RoleGroup:
     def __init__(self, name):
         self.name = name
@@ -159,7 +247,7 @@ class RoleGroup:
 
         self.roles = []
 
-        self.type = "none" # none/single/multiple
+        self.mode = "none" # none/single/multiple
 
         # multiple
         self.max = None
@@ -180,15 +268,15 @@ class RoleCommand:
         return self.__str__()
 
 class Ticket:
-    def __init__(self, server, id):
+    def __init__(self, server, id, name, channel=None, admin_only=False, users=[], status="unknown"):
         self.server = server
         self.ID = id
+        self.name = name
 
-        self.name = None
-        self.channel = None
-        self.admin_only = False
-        self.users = []
-        self.status = "unknown"
+        self.channel = channel
+        self.admin_only = admin_only
+        self.users = users
+        self.status = status
 
 class User:
     def __init__(self, server, id):
