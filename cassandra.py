@@ -4,6 +4,7 @@ import random
 import time
 import datetime
 import math
+import requests
 
 import discord
 from discord.ext import commands, tasks
@@ -16,9 +17,11 @@ from lib import libcassandra as cassandra
 # ==============================================================================
 
 load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
+DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
+HEALTHCHECKS_TOKEN = os.getenv('HEALTHCHECKS_TOKEN')
 
 HELP_TIMEOUT = 20
+HEALTHCHECKS_TIMEOUT = 3600
 
 EMOJI_FIRST = "⏮"
 EMOJI_PREVIOUS = "◀"
@@ -346,6 +349,19 @@ async def update_help():
 
     help_messages = new_help_messages
 
+@tasks.loop(seconds=HEALTHCHECKS_TIMEOUT)
+async def update_healthchecks():
+    if HEALTHCHECKS_TOKEN is None:
+        return
+
+    print("Pinging healthchecks.io")
+
+    try:
+        requests.get("https://hc-ping.com/%s" % HEALTHCHECKS_TOKEN, timeout=10)
+        print("Healthcheck successful")
+    except requests.RequestException as e:
+        print("Ping to healthchecks.io failed! %s" % e)
+
 print("Starting Cassandra Bot...")
 
 # Load config
@@ -365,7 +381,10 @@ for cogname in cfg.cogs:
 print("Finished initializing autoload cogs.")
 
 update_help.start()
-print(f'Cassandra has connected to Discord!')
+if HEALTHCHECKS_TOKEN is not None:
+    update_healthchecks.start()
+
+print("Cassandra has connected to Discord!")
 print("Finished starting Cassandra Bot.")
 
-bot.run(TOKEN)
+bot.run(DISCORD_TOKEN)
