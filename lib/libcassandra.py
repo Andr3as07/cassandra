@@ -57,13 +57,13 @@ def load_server(sid):
     _cache_srv[sid] = srv
 
     # Dispatch event
-    dispatch("server_load", type('',(object,),{"server": srv})())
+    dispatch("server-load", type('',(object,),{"server": srv})())
 
     return srv
 
 def save_server(srv):
-    # Dispach event
-    dispach("server_save", type('',(object,),{"server": srv})())
+    # Dispatch event
+    dispatch("server-save", type('',(object,),{"server": srv})())
 
     srv.save()
 
@@ -85,13 +85,13 @@ def load_user(srv, uid):
     _cache_usr[cacheid] = usr
 
     # Dispatch event
-    dispatch("user_load", type('',(object,),{"user": usr})())
+    dispatch("user-load", type('',(object,),{"user": usr})())
 
     return usr
 
 def save_user(usr):
     # Dispatch event
-    dispatch("user_save", type('',(object,),{"user": usr})())
+    dispatch("user-save", type('',(object,),{"user": usr})())
 
     usr.save()
 

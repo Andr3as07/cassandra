@@ -141,7 +141,7 @@ async def load(ctx, name):
         return
 
     # Dispatch preload event
-    response = cassandra.Dispach("cog-loading", type('',(object,),{"name":name, "cancel":False})())
+    response = cassandra.dispatch("cog-loading", type('',(object,),{"name":name, "cancel":False})())
 
     if response.cancel == True:
         await ctx.send("Cog %s has been stoped form loading!" % name)
@@ -152,8 +152,8 @@ async def load(ctx, name):
     active_cogs.append(cog)
     help_pages = None # Clear help page cache
 
-    # Disptch event
-    cassandra.Dispach("cog-loaded", type('',(object,),{"name":name})())
+    # Dispatch event
+    cassandra.dispatch("cog-loaded", type('',(object,),{"name":name})())
 
     await ctx.send("Cog %s loaded." % name)
 
@@ -173,7 +173,7 @@ async def unload(ctx, name):
         return
 
     # Dispatch preload event
-    response = cassandra.Dispach("cog-unloading", type('',(object,),{"name":name, "cancel":False})())
+    response = cassandra.dispatch("cog-unloading", type('',(object,),{"name":name, "cancel":False})())
 
     if response.cancel == True:
         await ctx.send("Cog %s has been stoped form unloading!" % name)
@@ -185,8 +185,8 @@ async def unload(ctx, name):
     bot.unload_extension("cogs.%s" % name)
     help_pages = None # Clear help page cache
 
-    # Disptch event
-    cassandra.Dispach("cog-unloaded", type('',(object,),{"name":name})())
+    # Dispatch event
+    cassandra.dispatch("cog-unloaded", type('',(object,),{"name":name})())
 
     await ctx.send("Cog %s unloaded." % name)
 

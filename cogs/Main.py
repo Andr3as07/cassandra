@@ -22,7 +22,7 @@ class Main(commands.Cog):
             if name.startswith("<@!") and name.endswith(">"):
                 uid = name[3:len(name) - 1]
 
-        usr = cassandra.load_user((ctx.guild.id, uid))
+        usr = cassandra.get_user((ctx.guild.id, uid))
         if usr is None:
             await ctx.send("User not found.")
             return
