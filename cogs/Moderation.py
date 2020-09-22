@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 
 from lib import libcassandra as cassandra
+from lib.logging import Logger
 
 EMOJI_INFO = ":information_source:"
 EMOJI_BAN = ":no_entry_sign:"
@@ -10,6 +11,7 @@ EMOJI_WARN = ":warning:"
 class Moderation(commands.Cog):
     def __init__(self, client):
         self.client = client
+        self._logger = Logger(self)
 
     def get_help_page(self):
         return {
@@ -28,6 +30,7 @@ class Moderation(commands.Cog):
     @commands.command(name="warn")
     @commands.has_permissions(manage_messages=True)
     async def warn(self, ctx, member : discord.Member, *, reason = None):
+        self._logger.trace("warn")
         # Audit log
         caudit = self.client.get_cog('Audit')
         if caudit is not None:
@@ -67,6 +70,7 @@ class Moderation(commands.Cog):
     @commands.command(name="ban")
     @commands.has_permissions(ban_members=True)
     async def ban(self, ctx, member : discord.Member, *, reason = None):
+        self._logger.trace("ban")
         # TODO: Tempban
 
         # Audit log
@@ -110,6 +114,7 @@ class Moderation(commands.Cog):
     @commands.command(name="kick")
     @commands.has_permissions(kick_members=True)
     async def kick(self, ctx, member : discord.Member, *, reason = None):
+        self._logger.trace("kick")
 
         # Audit log
         caudit = self.client.get_cog('Audit')
@@ -152,6 +157,7 @@ class Moderation(commands.Cog):
     @commands.command(name="clear")
     @commands.has_permissions(manage_messages=True)
     async def clear(self, ctx, amt = 10):
+        self._logger.trace("clear")
         if not type(amt) is int:
             try:
                 amt = int(amt, 10)

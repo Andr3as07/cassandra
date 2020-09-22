@@ -1,9 +1,11 @@
 import discord
 
 from .data import Server, User
+from .logging import Logger
 
 # Event system
 _event_listeners = {}
+_logger = Logger("Cassandra Lib")
 
 def get_event_listeners(event):
     if not event in _event_listeners:
@@ -11,6 +13,7 @@ def get_event_listeners(event):
     return _event_listeners[event]
 
 def add_event_listener(event, who, callback):
+    _logger.trace("add_event_listener(%s)" % event)
     if callback is None or who is None or event is None:
         return False
 
@@ -22,6 +25,7 @@ def add_event_listener(event, who, callback):
     return True
 
 def remove_event_listener(event, who):
+    _logger.trace("remove_event_listeners(%s)" % event)
     if event is None or who is None:
         return False
 
@@ -30,7 +34,7 @@ def remove_event_listener(event, who):
     return True
 
 def dispatch(event, args):
-    print("#" + event)
+    _logger.trace("dispatch(%s)" % event)
     # Convert dictionary to anonymous object
     if type(args) is dict:
         args = type('',(object,),args)()

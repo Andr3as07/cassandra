@@ -5,6 +5,8 @@ import discord
 from discord.ext import commands
 from lib import util
 from lib import libcassandra as cassandra
+from lib.logging import Logger
+
 
 EMOJI_WARN = "⚠"
 EMOJI_ERROR = "❌"
@@ -15,6 +17,7 @@ IMAGE_HEADS = "https://i.imgur.com/BvnksIe.png"
 class Cassino(commands.Cog):
     def __init__(self, client):
         self.client = client
+        self._logger = Logger(self)
 
     def get_help_page(self):
         return {
@@ -58,6 +61,7 @@ class Cassino(commands.Cog):
 
     @commands.command(name="coinflip", help="Flip a coin and bet on the outcome.")
     async def coinflip(self, ctx, side = None, bet = None):
+        self._logger.trace("coinflip")
         if side is None:
             await self._usage_coinflip(ctx)
             return
@@ -131,31 +135,38 @@ class Cassino(commands.Cog):
 
     @commands.command(name="lottery")
     async def lottery(self, ctx):
+        self._logger.trace("lottery")
         await ctx.send("Not implemented")
 
     @commands.command(name="slots")
     async def slots(self, ctx):
+        self._logger.trace("slots")
         await ctx.send("Not implemented")
 
     @commands.command(name="scratch")
     async def scratch(self, ctx):
+        self._logger.trace("scratch")
         await ctx.send("Not implemented")
 
     @commands.command(name="dice")
     async def dice(self, ctx):
+        self._logger.trace("dice")
         await ctx.send("Not implemented")
 
     @commands.command(name="snakeeyes")
     async def snakeeyes(self, ctx):
+        self._logger.trace("snakeeyes")
         await ctx.send("Not implemented")
 
     @commands.command(name="blackjack")
     async def blackjack(self, ctx):
+        self._logger.trace("blackjack")
         await ctx.send("Not implemented")
 
     # Casino
     @commands.command(name="spin", help="Spin the wheel every 5 minutes for a reward.")
     async def spin(self, ctx):
+        self._logger.trace("spin")
         ods = [
             { "symbol": "<:c500:710482148305403924>", "propbability": 1, "ods": 500, "name": "MYTHIC" },
             { "symbol": "<:c100:710482154500653056>", "propbability": 2, "ods": 100, "name": "IMORTAL" },

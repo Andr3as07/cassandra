@@ -11,6 +11,7 @@ from discord.ext import commands, tasks
 from dotenv import load_dotenv
 from lib import util, data
 from lib import libcassandra as cassandra
+from lib import logging as log
 
 # ==============================================================================
 # Config
@@ -231,7 +232,7 @@ async def help(ctx):
 
     # TODO: Update help pages
     if help_pages is None:
-        print("Creating help page cache")
+        log.info("Creating help page cache")
         help_pages = []
         for cog in active_cogs:
             try:
@@ -241,6 +242,7 @@ async def help(ctx):
                 pass
 
     if len(help_pages) < 1:
+        log.warn("Failed to display help pages. Number of help pages is 0!")
         await ctx.send("Failed to display help pages.")
         return
 
@@ -327,12 +329,12 @@ async def update_help():
     if len(help_messages) == 0:
         return
 
-    print("Processing Help Messages")
+    logger.info("Processing Help Messages")
 
     new_help_messages = {}
     for hmsgid in help_messages:
         hmsg = help_messages[hmsgid]
-        print(util.getts() - hmsg["time"])
+        logger.debug(util.getts() - hmsg["time"])
         if util.getts() - hmsg["time"] > 60:
             try:
                 msg = hmsg["msg"]
@@ -342,7 +344,7 @@ async def update_help():
                 await msg.clear_reaction(EMOJI_NEXT)
                 await msg.clear_reaction(EMOJI_LAST)
             except Exception:
-                print(ex)
+                logger.error(ex)
 
         else:
             new_help_messages[hmsgid] = hmsg
@@ -354,37 +356,45 @@ async def update_healthchecks():
     if HEALTHCHECKS_TOKEN is None:
         return
 
-    print("Pinging healthchecks.io")
+    logger.info("Pinging healthchecks.io")
 
     try:
         requests.get("https://hc-ping.com/%s" % HEALTHCHECKS_TOKEN, timeout=10)
-        print("Healthcheck successful")
+        logger.info("Healthcheck successful")
     except requests.RequestException as e:
-        print("Ping to healthchecks.io failed! %s" % e)
+        logger.warn("Ping to healthchecks.io failed! %s" % e)
 
-print("Starting Cassandra Bot...")
+log.set_log_level(log.LogLevel.DEBUG)
+logger = log.Logger("Base")
+
+logger.info("Starting Cassandra Bot...")
 
 # Load config
-print("Loading global bot configuration...")
+logger.info("Loading global bot configuration...")
 cfg = data.CassandraConfig("data/config.json")
 cfg.load()
-print("Finished loading global bot configuration.")
+logger.info("Finished loading global bot configuration.")
 
-print("Initializing autoload cogs...")
+logger.info("Initializing autoload cogs...")
 active_cogs = []
 for cogname in cfg.cogs:
     cog = cfg.cogs[cogname]
     if cog.autoload == True:
-        print("Autoloading cog: %s" % cog.name)
+        logger.info("Autoloading cog: %s" % cog.name)
         bot.load_extension("cogs.%s" % cog.name)
         active_cogs.append(cog)
-print("Finished initializing autoload cogs.")
+logger.info("Finished initializing autoload cogs.")
 
 update_help.start()
-if HEALTHCHECKS_TOKEN is not None:
+if HEALTHCHECKS_TOKEN is None:
+    logger.warn("No healthchecks.io token found. You will not be notified when the bot goes down!")
+else:
     update_healthchecks.start()
 
-print("Cassandra has connected to Discord!")
-print("Finished starting Cassandra Bot.")
+logger.info("Cassandra has connected to Discord!")
+logger.info("Finished starting Cassandra Bot.")
 
-bot.run(DISCORD_TOKEN)
+try:
+    bot.run(DISCORD_TOKEN)
+except Exception as e:
+    logger.fatal("Failed to connect to discord API! %s" % e)

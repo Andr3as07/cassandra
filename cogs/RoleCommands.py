@@ -3,12 +3,15 @@ from discord.ext import commands
 from discord.utils import get
 
 from lib import libcassandra as cassandra
+from lib.logging import Logger
 
 class RoleCommands(commands.Cog):
     def __init__(self, client):
         self.client = client
+        self._logger = Logger(self)
 
     async def _print_roles(self, ctx, srv, title = "Here is a list of available roles"):
+        self._logger.trace("_print_roles")
         # Print all roles on the server
         if len(srv.role_commands) == 0:
             await ctx.send("No role commands found")
@@ -25,6 +28,7 @@ class RoleCommands(commands.Cog):
         await ctx.send(text)
 
     def _get_role(self, srv, name):
+        self._logger.trace("_get_role")
         if srv.role_commands == 0:
             return None, None
 
@@ -37,6 +41,7 @@ class RoleCommands(commands.Cog):
 
     @commands.command(name="role")
     async def role(self, ctx, role = None):
+        self._logger.trace("role")
         srv = cassandra.load_server(ctx.guild.id)
         if role is None:
             # Print all roles on the server

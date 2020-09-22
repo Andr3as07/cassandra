@@ -3,16 +3,21 @@ import discord
 from discord.ext import commands
 
 from lib import libcassandra as cassandra
+from lib.logging import Logger
+
 
 class Xp(commands.Cog):
     def __init__(self, client):
         self.client = client
+        self._logger = Logger(self)
 
     def get_xp(self, u):
+        self._logger.trace("get_xp")
         usr = cassandra.get_user(u)
         return usr.xp # xp
 
     def set_xp(self, u, amt):
+        self._logger.trace("set_xp")
         usr = cassandra.get_user(u)
         old = usr.xp
 
@@ -23,6 +28,7 @@ class Xp(commands.Cog):
         return old # Old xp
 
     def add_xp(self, u, amt):
+        self._logger.trace("add_xp")
         usr = cassandra.get_user(u)
         old = usr.xp
         new = old + amt
@@ -33,6 +39,7 @@ class Xp(commands.Cog):
         return usr.xp # New xp
 
     def get_level(self, u):
+        self._logger.trace("get_level")
         xp = self.get_xp(u)
         lv = 1
         for i in range(2, 100):
