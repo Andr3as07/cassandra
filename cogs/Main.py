@@ -6,13 +6,17 @@ from discord.ext import commands
 from lib.data import User, Server
 from lib import util
 from lib import libcassandra as cassandra
+from lib.logging import Logger
+
 
 class Main(commands.Cog):
     def __init__(self, client):
         self.client = client
+        self._logger = Logger(self)
 
     @commands.command(name="profile", help="Shows the profile.")
     async def profile(self, ctx, name = None):
+        self._logger.trace("profile")
         # Do not do anything on private messages
         if ctx.guild == None:
             return

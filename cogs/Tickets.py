@@ -4,10 +4,12 @@ from discord.utils import get
 
 from lib.data import Ticket
 from lib import libcassandra as cassandra
+from lib.logging import Logger
 
 class Tickets(commands.Cog):
     def __init__(self, client):
         self.client = client
+        self._logger = Logger(self)
 
     def get_help_page(self):
         return {
@@ -23,6 +25,7 @@ class Tickets(commands.Cog):
         }
 
     async def open(self, dguild, duser, name):
+        self._logger.trace("open")
         srv = cassandra.get_server(dguild.id)
 
         # Get category
@@ -79,6 +82,7 @@ class Tickets(commands.Cog):
         return True, ticket
 
     async def close(self, dguild, duser, channel):
+        self._logger.trace("close")
         srv = cassandra.get_server(dguild.id)
 
         ticket = None
@@ -105,16 +109,20 @@ class Tickets(commands.Cog):
         return True, None
 
     def add_user(self, ticket, u):
+        self._logger.trace("add_user")
         pass # Add a user to a ticket
 
     def rem_user(self, ticket, u):
+        self._logger.trace("rem_user")
         pass # Remove a user from a ticket
 
     def set_admin_only(self, ticket, ao):
+        self._logger.trace("set_admin_only")
         pass # Set or unset admin only status
 
     @commands.command(name="ticket")
     async def ticket(self, ctx, action=None, *, name=None):
+        self._logger.trace("ticket")
         srv = cassandra.get_server(ctx.guild.id)
 
         if srv.tickets_channel_closed is None or srv.tickets_category is None:
@@ -163,7 +171,6 @@ class Tickets(commands.Cog):
         elif action in ["rename", "ren", "mv"]:
             await ctx.send("Not implemented!")
             return
-
 
 def setup(client):
     client.add_cog(Tickets(client))

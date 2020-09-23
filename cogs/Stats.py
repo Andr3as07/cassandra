@@ -3,6 +3,8 @@ from discord.ext import commands, tasks
 from lib import util
 
 from lib import libcassandra as cassandra
+from lib.logging import Logger
+
 
 MSG_TIMEOUT = 60
 MSG_BONUS_COINS = 1
@@ -19,16 +21,20 @@ VOICE_BONUS_XP = 2
 class Stats(commands.Cog):
     def __init__(self, client):
         self.client = client
+        self._logger = Logger(self)
 
     def get_msg(self, u):
+        self._logger.trace("get_msg")
         usr = cassandra.get_user(u)
         return usr.msg_count
 
     def get_reaction(self, u):
+        self._logger.trace("get_reaction")
         usr = cassandra.get_user(u)
         return usr.reaction_count
 
     def get_voice(self, u):
+        self._logger.trace("get_voice")
         usr = cassandra.get_user(u)
         return usr.voice_time
 
@@ -38,7 +44,7 @@ class Stats(commands.Cog):
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
-        print("Reaction")
+        self._logger.trace("on_reaction_add")
         # Ignore reactions from bots
         if user.bot == True:
             return
@@ -86,6 +92,8 @@ class Stats(commands.Cog):
         if message.guild is None:
             return
 
+        self._logger.trace("on_message")
+
         srv = cassandra.get_server(message.guild.id)
         # TODO: Check if server is not found
 
@@ -123,7 +131,7 @@ class Stats(commands.Cog):
 
     @tasks.loop(seconds=VOICE_TIMEOUT)
     async def update_voice(self):
-        print("Processing Voice Channel Memberships")
+        self._logger.trace("update_voice")
 
         # For all voice channels on each guild
         for guild in self.client.guilds:

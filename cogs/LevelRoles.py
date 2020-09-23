@@ -3,6 +3,7 @@ from discord.ext import commands, tasks
 from discord.utils import get
 
 from lib import libcassandra as cassandra
+from lib.logging import Logger
 
 UPDATE_TIMEOUT_SLOW = 3600
 UPDATE_TIMEOUT_FAST = 10
@@ -10,10 +11,12 @@ UPDATE_TIMEOUT_FAST = 10
 class LevelRoles(commands.Cog):
     def __init__(self, client):
         self.client = client
+        self._logger = Logger(self)
 
         self._cache_xp_upate = [] # Holds tuples for users to update
 
     def _build_level_rank_cache(self, guild, srv=None):
+        self._logger.trace("_build_level_rank_cache")
         if srv is None:
             srv = cassandra.get_server(guild.id)
 
@@ -26,6 +29,7 @@ class LevelRoles(commands.Cog):
         return dict(sorted(lv_role_cache.items(), key=lambda item: item[0]))
 
     async def update_user(self, guild, user, lv_role_cache=None):
+        self._logger.trace("update_user")
         if lv_role_cache is None:
             lv_role_cache = self._build_level_rank_cache(guild)
 
@@ -48,7 +52,7 @@ class LevelRoles(commands.Cog):
         if highest_role in user.roles:
             return
 
-        print(guild.name, user.name, level, highest_role)
+        self._logger.debug(guild.name, user.name, level, highest_role)
 
         for urole in user.roles:
             if urole in lv_role_cache.values():
@@ -61,6 +65,7 @@ class LevelRoles(commands.Cog):
         # TODO: Anounce
 
     async def update_guild(self, guild):
+        self._logger.trace("update_guild")
         # Do not do anything for unavailable guilds
         if guild.unavailable == True:
             return
@@ -85,6 +90,7 @@ class LevelRoles(commands.Cog):
         cassandra.add_event_listener("xp-change", self, self.on_xp_change)
 
     def on_xp_change(self, args):
+        self._logger.trace("on_xp_change")
         if args.old >= args.new:
             return
 
@@ -98,7 +104,7 @@ class LevelRoles(commands.Cog):
         if len(self._cache_xp_upate) == 0:
             return
 
-        print("Processing LevelRank Changes (fast)")
+        self._logger.trace("update_fast")
 
         for entry in self._cache_xp_upate:
             guild = get(self.client.guilds, id=entry.server.ID)
@@ -115,7 +121,7 @@ class LevelRoles(commands.Cog):
 
     @tasks.loop(seconds=UPDATE_TIMEOUT_SLOW)
     async def update_slow(self):
-        print("Processing LevelRank Changes (slow)")
+        self._logger.trace("update_slow")
 
         for guild in self.client.guilds:
             await self.update_guild(guild)

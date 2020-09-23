@@ -4,6 +4,9 @@ import json
 import os
 from discord.ext import commands
 
+from lib.logging import Logger
+
+
 EMOJI_A = "🅰"
 EMOJI_B = "🅱"
 EMOJI_8BALL = "🎱"
@@ -11,6 +14,7 @@ EMOJI_8BALL = "🎱"
 class Fun(commands.Cog):
     def __init__(self, client):
         self.client = client
+        self._logger = Logger(self)
 
         self.wyr_data = []
         self.whatami_data = []
@@ -33,7 +37,7 @@ class Fun(commands.Cog):
 
             self.wyr_data = jdata["questions"]
 
-            print("Loaded WYR Data")
+            self._logger.info("Loaded WYR Data")
             return True
 
     def _load_fortune_assets(self):
@@ -51,8 +55,9 @@ class Fun(commands.Cog):
                 jdata = json.load(f)
 
                 self.fortunes[filename[:-5]] = jdata["fortunes"]
-                print("Loaded fortune database %s" % filename)
+                self._logger.info("Loaded fortune database %s" % filename)
 
+        self._logger.info("Loaded fortune Data")
         return True
 
     def _load_whatami_assets(self):
@@ -66,7 +71,7 @@ class Fun(commands.Cog):
 
             self.whatami_data = jdata["quotes"]
 
-        print("Loaded whatami Data")
+        self._logger.info("Loaded whatami Data")
         return True
 
     def _load_8ball_assets(self):
@@ -80,7 +85,7 @@ class Fun(commands.Cog):
 
             self.eightball_data = jdata["answers"]
 
-        print("Loaded 8ball Data")
+        self._logger.info("Loaded 8ball Data")
         return True
 
     def get_help_page(self):
@@ -101,15 +106,18 @@ class Fun(commands.Cog):
 
     @commands.command(name="whatami")
     async def whatami(self, ctx):
+        self._logger.trace("whatami")
         quote = random.choice(self.whatami_data)
         await ctx.send(quote)
 
     @commands.command(name="conn")
     async def conn(self, ctx):
+        self._logger.trace("conn")
         await ctx.send("Not implemented")
 
     @commands.command(name="fortune")
     async def fortune(self, ctx):
+        self._logger.trace("fortune")
 
         # TODO: Handle dictionary is empty
 
@@ -123,14 +131,17 @@ class Fun(commands.Cog):
 
     @commands.command(name="tord")
     async def tord(self, ctx):
+        self._logger.trace("tord")
         await ctx.send("Not implemented")
 
     @commands.command(name="ttt")
     async def ttt(self, ctx):
+        self._logger.trace("ttt")
         await ctx.send("Not implemented")
 
     @commands.command(name="wyr")
     async def wyr(self, ctx):
+        self._logger.trace("wyr")
         line = random.choice(self.wyr_data)
 
         embed = discord.Embed(
@@ -146,6 +157,7 @@ class Fun(commands.Cog):
 
     @commands.command(name="8ball")
     async def eightball(self, ctx):
+        self._logger.trace("8ball")
         await ctx.send(EMOJI_8BALL + " " + random.choice(self.eightball_data))
 
 def setup(client):

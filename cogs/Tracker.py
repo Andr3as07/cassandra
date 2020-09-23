@@ -2,22 +2,27 @@ import discord
 from discord.ext import commands, tasks
 
 from lib import libcassandra as cassandra
+from lib.logging import Logger
 
 UPDATE_TIMEOUT = 3600
 
 class Tracker(commands.Cog):
     def __init__(self, client):
         self.client = client
+        self._logger = Logger(self)
 
     def get_nicknames(self, u):
+        self._logger.trace("get_nicknames")
         usr = cassandra.get_user(u)
         return usr.nicknames
 
     def get_names(self, u):
+        self._logger.trace("get_names")
         usr = cassandra.get_user(u)
         return usr.names
 
     def add_nickname(self, u, dusr):
+        self._logger.trace("add_nickname")
         usr = cassandra.get_user(u)
 
         if dusr.nick is None:
@@ -36,6 +41,7 @@ class Tracker(commands.Cog):
         return True # New nick
 
     def add_name(self, u, dusr):
+        self._logger.trace("add_name")
         usr = cassandra.get_user(u)
 
         name = dusr.name + "#" + dusr.discriminator
@@ -59,6 +65,7 @@ class Tracker(commands.Cog):
     @commands.command(name="whois")
     @commands.has_permissions(manage_messages=True)
     async def whois(self, ctx, member : discord.Member):
+        self._logger.trace("whois")
         usr = cassandra.get_user((ctx.guild.id, member.id))
         if usr is None:
             await ctx.send("Couldn't get user information")
@@ -93,6 +100,7 @@ class Tracker(commands.Cog):
 
     @commands.Cog.listener() # Username, discriminator
     async def on_member_join(self, member):
+        self._logger.trace("on_member_join")
         usr = cassandra.get_user((member.guild.id, member.id))
 
         update = False
@@ -108,6 +116,7 @@ class Tracker(commands.Cog):
 
     @commands.Cog.listener() # Nickname
     async def on_member_update(self, before, after):
+        self._logger.trace("on_member_update")
         usr = cassandra.get_user((after.guild.id, after.id))
 
         if self.add_nickname(usr, after):
@@ -122,7 +131,7 @@ class Tracker(commands.Cog):
 
     @tasks.loop(seconds=UPDATE_TIMEOUT)
     async def update(self):
-        print("Processing Nickname Changes")
+        self._logger.trace("update")
 
         for guild in self.client.guilds:
             # Do not do anything for unavailable guilds
