@@ -5,7 +5,6 @@ from lib import util
 from lib import libcassandra as cassandra
 from lib.logging import Logger
 
-
 MSG_TIMEOUT = 60
 MSG_BONUS_COINS = 1
 MSG_BONUS_XP = 5
@@ -92,7 +91,7 @@ class Stats(commands.Cog):
         if message.guild is None:
             return
 
-        self._logger.trace("on_message")
+        self._logger.trace("on_message(%s)" % message.content)
 
         srv = cassandra.get_server(message.guild.id)
         # TODO: Check if server is not found

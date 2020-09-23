@@ -15,6 +15,67 @@ class LevelRoles(commands.Cog):
 
         self._cache_xp_upate = [] # Holds tuples for users to update
 
+    @commands.command(name="lvroles")
+    async def lvroles(self, ctx):
+        srv = cassandra.get_server(ctx.guild.id)
+        if len(srv.level_roles) > 0:
+            text = "**Level Roles**\n\n"
+            for lvstr, roleid in srv.level_roles.items():
+                text = text + ("%s: <@&%s>\n" % (lvstr, get(ctx.guild.roles, id=roleid).id))
+            await ctx.send(text)
+        else:
+            ctx.send("This server has no level roles configured.")
+
+    @commands.command(name="lvrole")
+    @commands.has_permissions(manage_roles=True)
+    async def lvrole(self, ctx, lvstr, rolestr=None):
+        lv = None
+        try:
+            lv = int(lvstr)
+        except Exception:
+            await ctx.send("<level> must be a positive number.")
+            return
+
+        if lv < 0:
+            await ctx.send("<level> must be a positive number.")
+            return
+
+        srv = cassandra.get_server(ctx.guild.id)
+        if rolestr is None:
+            # Remove Level role
+            if lvstr in srv.level_roles:
+                srv.level_roles.pop(lvstr, None)
+                await ctx.send("Removed level role for level %s." % lv)
+            else:
+                await ctx.send("No level role is set for level %s." % lv)
+        else:
+            if lvstr in srv.level_roles:
+                await ctx.send("Level %s currently has role %s.\nPlease remove it manualy first, if you want another role at this level.")
+                return
+
+            if len(rolestr) == 22 and rolestr.startswith("<@&") and rolestr.endswith(">"):
+                try:
+                    roleid = int(rolestr[3:21])
+                except:
+                    await ctx.send("Role not found %s!" % rolestr)
+                    return
+
+                role = get(ctx.guild.roles, id=int(roleid))
+                if role is None:
+                    await ctx.send("Role not found <@&%s>!" % roleid)
+                    return
+
+                srv.level_roles[lvstr] = roleid
+                cassandra.save_server(srv)
+                await ctx.send("Role <@&%s> set for level %s." % (roleid, lv))
+            else:
+                ctx.send("%s is not a vaild role!" % rolestr)
+                return
+
+        pass
+
+
+
     def _build_level_rank_cache(self, guild, srv=None):
         self._logger.trace("_build_level_rank_cache")
         if srv is None:
