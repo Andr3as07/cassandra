@@ -169,7 +169,7 @@ class Stats(commands.Cog):
                     if cxp is not None:
 
                         # Give an xp bonus for more people in the voicechat
-                        xp = xp = usr.xp + VOICE_BONUS_XP + (vchmem - 2)
+                        xp = VOICE_BONUS_XP + (vchmem - 2)
                         cxp.add_xp(usr, xp)
 
                     cassandra.save_user(usr)

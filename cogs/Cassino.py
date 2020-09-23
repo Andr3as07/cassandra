@@ -168,13 +168,13 @@ class Cassino(commands.Cog):
     async def spin(self, ctx):
         self._logger.trace("spin")
         ods = [
-            { "symbol": "<:c500:710482148305403924>", "propbability": 1, "ods": 500, "name": "MYTHIC" },
-            { "symbol": "<:c100:710482154500653056>", "propbability": 2, "ods": 100, "name": "IMORTAL" },
-            { "symbol": "<:c50:710482156895469691>", "propbability": 4, "ods": 50, "name": "LEGENDARY" },
-            { "symbol": "<:c25:710482155310022758>", "propbability": 8, "ods": 25, "name": "EPIC" },
-            { "symbol": "<:c10:710482151484817439>", "propbability": 16, "ods": 10, "name": "RARE" },
-            { "symbol": "<:c5:710482137895403520>", "propbability": 24, "ods": 5, "name": "UNCOMMON" },
-            { "symbol": "<:c1:710482104705613845>", "propbability": 48, "ods": 1, "name": "COMMON" }
+            { "symbol": "<:c500:710482148305403924>", "propbability": 1,  "ods": 500, "name": "MYTHIC" },
+            { "symbol": "<:c100:710482154500653056>", "propbability": 2,  "ods": 100, "name": "IMORTAL" },
+            { "symbol": "<:c50:710482156895469691>",  "propbability": 4,  "ods": 50,  "name": "LEGENDARY" },
+            { "symbol": "<:c25:710482155310022758>",  "propbability": 8,  "ods": 25,  "name": "EPIC" },
+            { "symbol": "<:c10:710482151484817439>",  "propbability": 16, "ods": 10,  "name": "RARE" },
+            { "symbol": "<:c5:710482137895403520>",   "propbability": 24, "ods": 5,   "name": "UNCOMMON" },
+            { "symbol": "<:c1:710482104705613845>",   "propbability": 48, "ods": 1,   "name": "COMMON" }
         ]
 
         usr = cassandra.get_user((ctx.guild.id, ctx.author.id))
