@@ -232,7 +232,7 @@ async def help(ctx):
 
     # TODO: Update help pages
     if help_pages is None:
-        log.info("Creating help page cache")
+        logger.info("Creating help page cache")
         help_pages = []
         for cog in active_cogs:
             try:
@@ -242,7 +242,7 @@ async def help(ctx):
                 pass
 
     if len(help_pages) < 1:
-        log.warn("Failed to display help pages. Number of help pages is 0!")
+        logger.warn("Failed to display help pages. Number of help pages is 0!")
         await ctx.send("Failed to display help pages.")
         return
 
