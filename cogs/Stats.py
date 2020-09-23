@@ -156,7 +156,7 @@ class Stats(commands.Cog):
                     elif member.voice.mute or member.voice.self_mute:
                         continue
 
-                    usr = cassandra.load_user((guild.id, member.id))
+                    usr = cassandra.get_user((guild.id, member.id))
                     usr.voice_time = usr.voice_time + VOICE_TIMEOUT
 
                     # Add balance if economy cog is loaded

@@ -36,7 +36,7 @@ class LevelRoles(commands.Cog):
                 text = text + ("%s: <@&%s>\n" % (lv, role.id))
             await ctx.send(text)
         else:
-            ctx.send("This server has no level roles configured.")
+            await ctx.send("This server has no level roles configured.")
 
     @commands.command(name="lvrole")
     @commands.has_permissions(manage_roles=True)
@@ -102,7 +102,7 @@ class LevelRoles(commands.Cog):
         return dict(sorted(lv_role_cache.items(), key=lambda item: item[0]))
 
     async def update_user(self, guild, user, lv_role_cache=None):
-        self._logger.trace("update_user")
+        self._logger.trace("update_user(%s)" % user.id)
         if lv_role_cache is None:
             lv_role_cache = self._build_level_rank_cache(guild)
 
@@ -125,20 +125,18 @@ class LevelRoles(commands.Cog):
         if highest_role in user.roles:
             return
 
-        self._logger.debug(guild.name, user.name, level, highest_role)
-
         for urole in user.roles:
             if urole in lv_role_cache.values():
                 await user.remove_roles(urole, reason="Userlevel rank") # TODO: There must be a more efficient way to do this
         await user.add_roles(highest_role, reason="Userlevel change")
 
         # Dispatch event
-        cassandra.dipatch("lvrole-change", {"duser":user,"user":cassandra.get_user((guild.id, user.id)),"role":highest_role})
+        cassandra.dispatch("lvrole-change", {"duser":user,"user":cassandra.get_user((guild.id, user.id)),"role":highest_role})
 
         # TODO: Anounce
 
     async def update_guild(self, guild):
-        self._logger.trace("update_guild")
+        self._logger.trace("update_guild(%s)" % guild.id)
         # Do not do anything for unavailable guilds
         if guild.unavailable == True:
             return
