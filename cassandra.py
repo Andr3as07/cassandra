@@ -341,7 +341,7 @@ async def update_help():
                 await msg.clear_reaction(EMOJI_PREVIOUS)
                 await msg.clear_reaction(EMOJI_NEXT)
                 await msg.clear_reaction(EMOJI_LAST)
-            except Exception:
+            except Exception as ex:
                 print(ex)
 
         else:
