@@ -15,13 +15,25 @@ class LevelRoles(commands.Cog):
 
         self._cache_xp_upate = [] # Holds tuples for users to update
 
+    def get_help_page(self):
+        return {
+            "title": "LevelRoles Commands",
+            "description": "Some of these commands require moderation or administrator permissions.",
+            "content": {
+                "lvroles": "Lists all reward roles that can be gained by leveling up.",
+                "lvrole <level>": "Removes a reward from the ladder. - Admin Only",
+                "lvrole <level> <role>": "Adds a reward level to the ladder. - Admin Only"
+            }
+        }
+
     @commands.command(name="lvroles")
     async def lvroles(self, ctx):
         srv = cassandra.get_server(ctx.guild.id)
         if len(srv.level_roles) > 0:
             text = "**Level Roles**\n\n"
-            for lvstr, roleid in srv.level_roles.items():
-                text = text + ("%s: <@&%s>\n" % (lvstr, get(ctx.guild.roles, id=roleid).id))
+            lvrolecache = self._build_level_rank_cache(ctx.guild, srv)
+            for lv, role in lvrolecache.items():
+                text = text + ("%s: <@&%s>\n" % (lv, role.id))
             await ctx.send(text)
         else:
             ctx.send("This server has no level roles configured.")
@@ -43,8 +55,8 @@ class LevelRoles(commands.Cog):
         srv = cassandra.get_server(ctx.guild.id)
         if rolestr is None:
             # Remove Level role
-            if lvstr in srv.level_roles:
-                srv.level_roles.pop(lvstr, None)
+            if lv in srv.level_roles:
+                srv.level_roles.pop(lv, None)
                 await ctx.send("Removed level role for level %s." % lv)
             else:
                 await ctx.send("No level role is set for level %s." % lv)
