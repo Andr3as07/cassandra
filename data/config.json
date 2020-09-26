@@ -10,6 +10,7 @@
         "LevelRoles": { "autoload": true },
         "Moderation": { "autoload": true },
         "Tracker": { "autoload": true },
+        "AutoChannel": { "autoload": true },
         "Tickets": { "autoload": false }
     }
 }

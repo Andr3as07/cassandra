@@ -58,6 +58,9 @@ class Server:
         self.level_roles = {}
         self.level_roles_channel = None
 
+        self.autochannel_router = None
+        self.autochannel_channels = []
+
     def _get_dir_path(self):
         return "data/%s" % self.ID
 
@@ -117,6 +120,14 @@ class Server:
                         self.tickets.append(ticket)
 
                 self.tickets_next_id = len(self.tickets) + 1
+
+            # Autochannels
+            if "auto_channel" in jdata:
+                if "router" in jdata["auto_channel"]:
+                    self.autochannel_router = jdata["auto_channel"]["router"]
+
+                if "channels" in jdata["auto_channel"]:
+                    self.autochannel_channels = jdata["auto_channel"]["channels"]
 
             # Level Roles
             if "level_roles" in jdata:
@@ -188,6 +199,10 @@ class Server:
                 'level_roles': {
                     'channel': self.level_roles_channel,
                     'level': self.level_roles
+                },
+                "auto_channel": {
+                    "router": self.autochannel_router,
+                    "channels": self.autochannel_channels
                 },
                 'role_commands': {}
             }
