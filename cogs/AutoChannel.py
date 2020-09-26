@@ -68,6 +68,63 @@ class AutoChannel(commands.Cog):
 
         return True
 
+    async def cleanup(self, guild=None):
+        self._logger.trace("cleanup(%s)" % guild)
+        if guild is None:
+            # For all guilds
+            for g in self.client.guilds:
+                # Do not do anything for unavailable guilds
+                if g.unavailable == True:
+                    continue
+
+                self.cleanup(g)
+
+        else:
+            srv = cassandra.get_server(guild.id)
+            for ac in srv.autochannel_channels:
+                channel = get(guild.channels, id=ac)
+                if channel is None:
+                    continue
+
+                await self.delete_autochannel(srv, guild, channel)
+
+    @commands.command(name="autochannel")
+    @commands.has_permissions(manage_channels=True)
+    async def autochannel(self, ctx, action, router=None):
+        self._logger.trace("autochannel")
+
+        srv = cassandra.get_server(ctx.guild.id)
+        if action in ["disable", "stop"]:
+            srv.autochannel_router = None
+            cassandra.save_server(srv)
+
+            await self.cleanup()
+
+            await ctx.send("Autochannels are no longer active.\nIf you want to use them in the future, you need to configure them again.")
+
+        elif action in ["setup", "start", "enable"]:
+            if router is None:
+                return # TODO: Print help
+
+            routerid = None
+            try:
+                routerid = int(router)
+            except Exception:
+                return # TODO: User feedback
+
+            routerch = get(ctx.guild.channels, id=routerid)
+            if routerch is None:
+                return # TODO: User feedback
+
+            if routerch.category is None:
+                await ctx.send("The autochannel router must be part of a channel category!")
+                return
+
+            srv.autochannel_router = routerid
+            cassandra.save_server(srv)
+
+            await ctx.send("Autochannels successfully configured.")
+
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         srv = cassandra.get_server(member.guild.id)
@@ -85,21 +142,7 @@ class AutoChannel(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         self._logger.trace("on_ready")
-
-        # For all voice channels on each guild
-        for guild in self.client.guilds:
-
-            # Do not do anything for unavailable guilds
-            if guild.unavailable == True:
-                continue
-
-            srv = cassandra.get_server(guild.id)
-            for ac in srv.autochannel_channels:
-                channel = get(guild.channels, id=ac)
-                if channel is None:
-                    continue
-
-                await self.delete_autochannel(srv, guild, channel)
+        await self.cleanup()
 
 def setup(client):
     client.add_cog(AutoChannel(client))
