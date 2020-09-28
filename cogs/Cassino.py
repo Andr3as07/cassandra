@@ -219,8 +219,17 @@ class Cassino(commands.Cog):
 
         cecon = self.client.get_cog('Economy')
         if cecon is not None:
-            description = description + ("\nYou got a reward of %s coins" % out["ods"])
-            cecon.add_balance(usr, out["ods"])
+            reward = out["ods"]
+
+            # Multiply reward by user level
+            cxp = self.client.get_cog('Xp')
+            if cxp is not None:
+                level = cxp.get_level(usr)
+                if level > 1:
+                    reward = reward * level
+
+            description = description + ("\nYou got a reward of %s coins" % reward)
+            cecon.add_balance(usr, reward)
         else:
             description = description + ("\n\n%s You did not get a reward, because the economy is not setup!" % EMOJI_WARN)
 
