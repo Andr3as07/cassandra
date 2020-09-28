@@ -157,7 +157,7 @@ class Stats(commands.Cog):
                     elif member.voice.mute or member.voice.self_mute:
                         continue
 
-                    usr = cassandra.load_user((guild.id, member.id))
+                    usr = cassandra.get_user((guild.id, member.id))
                     usr.voice_time = usr.voice_time + VOICE_TIMEOUT
 
                     # Add balance if economy cog is loaded
@@ -170,7 +170,7 @@ class Stats(commands.Cog):
                     if cxp is not None:
 
                         # Give an xp bonus for more people in the voicechat
-                        xp = xp = usr.xp + VOICE_BONUS_XP + (vchmem - 2)
+                        xp = usr.xp + VOICE_BONUS_XP + (vchmem - 2)
                         cxp.add_xp(usr, xp)
 
                     cassandra.save_user(usr)

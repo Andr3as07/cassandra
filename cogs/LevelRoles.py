@@ -52,15 +52,13 @@ class LevelRoles(commands.Cog):
         if highest_role in user.roles:
             return
 
-        self._logger.debug(guild.name, user.name, level, highest_role)
-
         for urole in user.roles:
             if urole in lv_role_cache.values():
                 await user.remove_roles(urole, reason="Userlevel rank") # TODO: There must be a more efficient way to do this
         await user.add_roles(highest_role, reason="Userlevel change")
 
         # Dispatch event
-        cassandra.dipatch("lvrole-change", {"duser":user,"user":cassandra.get_user((guild.id, user.id)),"role":highest_role})
+        cassandra.dispatch("lvrole-change", {"duser":user,"user":cassandra.get_user((guild.id, user.id)),"role":highest_role})
 
         # TODO: Anounce
 

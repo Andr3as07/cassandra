@@ -77,7 +77,7 @@ class AutoChannel(commands.Cog):
                 if g.unavailable == True:
                     continue
 
-                self.cleanup(g)
+                await self.cleanup(g)
 
         else:
             srv = cassandra.get_server(guild.id)
@@ -134,7 +134,7 @@ class AutoChannel(commands.Cog):
                 self._logger.debug("user join router")
                 await self.create_autochannel(srv, member.guild, member)
 
-        elif before.channel is not None:
+        if before.channel is not None:
             if before.channel.id in srv.autochannel_channels:
                 self._logger.debug("user left autochannel")
                 await self.delete_autochannel(srv, member.guild, before.channel)
