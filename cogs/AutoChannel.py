@@ -56,7 +56,7 @@ class AutoChannel(commands.Cog):
 
         # Check if the channel is empty
         if len(channel.members) > 0:
-            self._logger.debug("still still users in channel")
+            self._logger.debug("still users in channel")
             return False
 
         # Remove from server data
