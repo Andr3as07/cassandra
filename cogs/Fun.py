@@ -6,7 +6,6 @@ from discord.ext import commands
 
 from lib.logging import Logger
 
-
 EMOJI_A = "🅰"
 EMOJI_B = "🅱"
 EMOJI_8BALL = "🎱"

@@ -144,7 +144,7 @@ class Server:
                 # Levels
                 if "level" in jlrdata:
                     for lv in jlrdata["level"]:
-                        self.level_roles[lv] = jlrdata["level"][lv]
+                        self.level_roles[int(lv)] = jlrdata["level"][lv]
 
             # Role Commands
             if "role_commands" in jdata:
