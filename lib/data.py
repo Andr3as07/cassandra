@@ -61,6 +61,8 @@ class Server:
         self.autochannel_router = None
         self.autochannel_channels = []
 
+        self.quarantine_role = None
+
     def _get_dir_path(self):
         return "data/%s" % self.ID
 
@@ -120,6 +122,10 @@ class Server:
                         self.tickets.append(ticket)
 
                 self.tickets_next_id = len(self.tickets) + 1
+
+            # Quarantine
+            if "quarantine_role" in jdata:
+                self.quarantine_role = jdata["quarantine_role"]
 
             # Autochannels
             if "auto_channel" in jdata:
@@ -182,6 +188,7 @@ class Server:
             data = {
                 'prefix_used': self.prefix_used,
                 'prefix_blocked': self.prefix_blocked,
+                'quarantine_role': self.quarantine_role,
                 'audit': {
                     'channel': self.audit_channel,
                     'ban': self.audit_log_ban,
@@ -316,6 +323,9 @@ class User:
 
         self.casino_last_spin = 0
 
+        self.quarantine_status = False
+        self.quarantine_roles = []
+
     def _get_path(self):
         return "data/%s/%s.json" % (self.server.ID, self.ID)
 
@@ -373,6 +383,10 @@ class User:
             if "names" in jdata:
                 self.names = jdata["names"] # TODO: Actualy parse this data
 
+            if "quarantine" in jdata:
+                self.quarantine_status = jdata["quarantine"]["status"]
+                self.quarantine_roles = jdata["quarantine"]["roles"]
+
         return True
 
     def save(self):
@@ -404,6 +418,10 @@ class User:
                 'names':  self.names, # To be filled later
                 'casino': {
                     'last_spin': self.casino_last_spin
+                },
+                "quarantine": {
+                    'roles': self.quarantine_roles,
+                    'status': self.quarantine_status
                 }
             }
 
