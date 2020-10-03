@@ -61,6 +61,8 @@ class Server:
         self.autochannel_router = None
         self.autochannel_channels = []
 
+        self.quarantine_role = None
+
     def _get_dir_path(self):
         return "data/%s" % self.ID
 
@@ -120,6 +122,10 @@ class Server:
                         self.tickets.append(ticket)
 
                 self.tickets_next_id = len(self.tickets) + 1
+
+            # Quarantine
+            if "quarantine_role" in jdata:
+                self.quarantine_role = jdata["quarantine_role"]
 
             # Autochannels
             if "auto_channel" in jdata:
@@ -182,6 +188,7 @@ class Server:
             data = {
                 'prefix_used': self.prefix_used,
                 'prefix_blocked': self.prefix_blocked,
+                'quarantine_role': self.quarantine_role,
                 'audit': {
                     'channel': self.audit_channel,
                     'ban': self.audit_log_ban,
