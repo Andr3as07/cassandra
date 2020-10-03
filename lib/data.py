@@ -323,6 +323,9 @@ class User:
 
         self.casino_last_spin = 0
 
+        self.quarantine_status = False
+        self.quarantine_roles = []
+
     def _get_path(self):
         return "data/%s/%s.json" % (self.server.ID, self.ID)
 
@@ -380,6 +383,10 @@ class User:
             if "names" in jdata:
                 self.names = jdata["names"] # TODO: Actualy parse this data
 
+            if "quarantine" in jdata:
+                self.quarantine_status = jdata["quarantine"]["status"]
+                self.quarantine_roles = jdata["quarantine"]["roles"]
+
         return True
 
     def save(self):
@@ -411,6 +418,10 @@ class User:
                 'names':  self.names, # To be filled later
                 'casino': {
                     'last_spin': self.casino_last_spin
+                },
+                "quarantine": {
+                    'roles': self.quarantine_roles,
+                    'status': self.quarantine_status
                 }
             }
 
