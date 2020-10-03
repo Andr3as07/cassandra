@@ -30,6 +30,10 @@ class Moderation(commands.Cog):
             }
         }
 
+    def is_user_quarantined(self, u):
+        usr = cassandra.get_user(u)
+        return usr.quarantine_status
+
     @commands.command(name="warn")
     @commands.has_permissions(manage_messages=True)
     async def warn(self, ctx, member : discord.Member, *, reason = None):
@@ -114,6 +118,28 @@ class Moderation(commands.Cog):
         # usr["history"].append(histentry)
         # save_user(usr)
 
+
+    @commands.command(name="qrole")
+    @commands.has_permissions(manage_channels=True)
+    async def qrole(self, ctx, action, role : discord.Role = None):
+        self._logger.trace("qrole")
+
+        srv = cassandra.get_server(ctx.guild.id)
+        if action in ["unset", "remove", "delete", "del", "rem"]:
+            srv.quarantine_role = None
+            cassandra.save_server(srv)
+
+            await ctx.send("Quarantine role unset.")
+
+        elif action in ["set", "add"]:
+            if role is None:
+                return # TODO: Print help
+
+            srv.quarantine_role = role.id
+            cassandra.save_server(srv)
+
+            await ctx.send("Quarantine role set.")
+
     @commands.command(name="quarantine")
     @commands.has_permissions(manage_roles=True)
     async def quarantine(self, ctx, member : discord.Member, *, reason = None):
@@ -143,7 +169,7 @@ class Moderation(commands.Cog):
                 self._logger.warn("Failed to remove role %s from member %s: %s" % (role.name, member.name, ex))
 
         if usr.server.quarantine_role is not None:
-            qrole = get(ctx.guild, id=usr.server.quarantine_role)
+            qrole = get(ctx.guild.roles, id=usr.server.quarantine_role)
             if qrole is not None:
                 try:
                     await member.add_roles(qrole, reason="Quarantine")
@@ -164,7 +190,6 @@ class Moderation(commands.Cog):
     async def unquarantine(self, ctx, member : discord.Member):
         self._logger.trace("unquarantine")
 
-
         usr = cassandra.get_user((ctx.guild.id, member.id))
         if usr.quarantine_status == False:
             await ctx.send("This user is not in quarantine!")
@@ -177,7 +202,7 @@ class Moderation(commands.Cog):
                 await caudit.print_audit(ctx.author, 'unquarantine', "Unquarantined %s#%s." % (member.name, member.discriminator))
 
         if usr.server.quarantine_role is not None:
-            qrole = get(ctx.guild, id=usr.server.quarantine_role)
+            qrole = get(ctx.guild.roles, id=usr.server.quarantine_role)
             if qrole is not None:
                 try:
                     await member.remove_roles(qrole, reason="Unquarantine")
